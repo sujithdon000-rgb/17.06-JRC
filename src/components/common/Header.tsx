@@ -422,7 +422,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             </div>
 
-          </div>
+
 
         {/* Mobile Slide-down Navigation Menu */}
         <AnimatePresence>
