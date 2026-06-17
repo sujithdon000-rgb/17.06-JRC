@@ -113,11 +113,11 @@ export const Header: React.FC<HeaderProps> = ({
             className="cursor-pointer flex items-center justify-center group py-1"
             title="Jeev Ruthi Collection Flagship"
           >
-<div className="flex items-center justify-center">
+<div className="flex items-center justify-center mr-10">
   <img
     src={logo}
     alt="Jeev Ruthi Collections"
-    className="h-14 w-auto object-contain"
+    className="h-20 w-20 object-contain"
   />
 </div>
           </div>
