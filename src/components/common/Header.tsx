@@ -322,8 +322,8 @@ export const Header: React.FC<HeaderProps> = ({
   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
 />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3">
-                        <span className="text-[10px] font-extrabold text-[#D4AF37] tracking-widest">ROYAL TISSUE</span>
-                        <span className="text-white text-xs font-serif font-bold">24K Zari Saree</span>
+                        <span className="text-[10px] font-extrabold text-[#D4AF37] tracking-widest">JEEV RUTHI</span>
+                        <span className="text-white text-xs font-serif font-bold">Premium Collection</span>
                       </div>
                     </div>
 
