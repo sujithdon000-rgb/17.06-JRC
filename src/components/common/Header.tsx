@@ -412,13 +412,14 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               {/* Admin Dashboard Portal Link */}
-              <button
-                onClick={() => onNavigate('admin')}
-                className="p-2 text-gray-500 hover:text-amber-600 transition rounded-full hover:bg-amber-50 focus:outline-none flex items-center gap-1"
-                title="Admin Control Panel"
-              >
-                <ShieldCheck className="w-5 h-5" />
-              </button>
+{/*
+<button
+  onClick={() => onNavigate('admin')}
+  className="p-2 text-gray-500 ..."
+>
+  <ShieldCheck className="w-5 h-5" />
+</button>
+*/}
 
             </div>
 
@@ -537,16 +538,18 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
 
                 <div className="pt-4 mt-2 border-t border-gray-200 flex items-center justify-around">
-                  <button 
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      onNavigate('admin');
-                    }}
-                    className="flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-[#111]"
-                  >
-                    <ShieldCheck className="w-4 h-4 text-amber-600" />
-                    <span>Admin Panel</span>
-                  </button>
+                  {/*
+<button
+  onClick={() => {
+    setMobileMenuOpen(false);
+    onNavigate('admin');
+  }}
+  className="flex items-center gap-2 ..."
+>
+  <ShieldCheck className="w-4 h-4 text-amber-600" />
+  <span>Admin Panel</span>
+</button>
+*/}
                   <a 
                     href="https://maps.app.goo.gl/QwoTg7hgNXX9gPp96"
                     target="_blank"
