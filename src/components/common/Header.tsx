@@ -121,7 +121,6 @@ export const Header: React.FC<HeaderProps> = ({
     }}
   />
 </div>
-
           {/* Main Navigation Links */}
           <nav className="hidden lg:flex items-center gap-10">
             <button
