@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { CategoryType, SubcategoryType } from '../../types';
+import logo from '../../assets/logo.png';
 
 interface HeaderProps {
   onNavigate: (page: string, category?: CategoryType, subcategory?: SubcategoryType) => void;
@@ -112,14 +113,17 @@ export const Header: React.FC<HeaderProps> = ({
             className="cursor-pointer flex items-center justify-center group py-1"
             title="Jeev Ruthi Collection Flagship"
           >
-            <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center border-2 border-[#D4AF37] shadow-md group-hover:scale-105 transition-transform duration-500">
-              {/* Premium Luxury Monogram Crown/Lotus Logo */}
-              <Crown className="w-6 h-6 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-500" />
-            </div>
+<div className="flex items-center justify-center">
+  <img
+    src={logo}
+    alt="Jeev Ruthi Collections"
+    className="h-14 w-auto object-contain"
+  />
+</div>
           </div>
 
           {/* Main Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-12 ml-8">
             <button
               onClick={() => onNavigate('home')}
               className={`text-sm tracking-widest font-semibold transition py-2 relative ${
