@@ -286,7 +286,7 @@ export const Header: React.FC<HeaderProps> = ({
             
             {/* Promotional Floating Visual Trigger */}
             <div 
-              className="relative hidden xl:flex items-center ml-6"
+              className="relative flex items-center ml-6"
               onMouseEnter={() => setPromoHovered(true)}
               onMouseLeave={() => setPromoHovered(false)}
             >
