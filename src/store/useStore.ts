@@ -150,7 +150,7 @@ export const useStore = create<StoreState>()(
           }
         ]
       },
-      isAdminAuth: true, // Started with demo admin logged in for easy testing
+      isAdminAuth: false, // Started with demo admin logged in for easy testing
       cart: [],
       wishlist: ['prod-1', 'prod-6'],
       orders: [
@@ -255,7 +255,7 @@ export const useStore = create<StoreState>()(
       }),
 
       loginAdmin: (pass) => {
-        if (pass === 'admin123' || pass === 'premium2026') {
+        if (pass === 'JR@2026#SecureAdmin$987') {
           set({ isAdminAuth: true });
           return true;
         }
