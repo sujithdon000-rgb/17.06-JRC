@@ -124,7 +124,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Main Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-12 ml-8">
+          <nav className="hidden lg:flex items-center gap-10">
             <button
               onClick={() => onNavigate('home')}
               className={`text-sm tracking-widest font-semibold transition py-2 relative ${
