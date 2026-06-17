@@ -95,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
           ? 'bg-white/95 backdrop-blur-md shadow-lg shadow-black/5 py-3 border-b border-gray-100' 
           : 'bg-white py-4 border-b border-gray-100'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-0 flex items-center justify-between">
           
           {/* Mobile Menu Button */}
           <button 
@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* BRAND LOGO ONLY (No text, No Tagline as required) */}
           <div 
             onClick={() => onNavigate('home')} 
-            className="cursor-pointer flex items-center justify-center group py-1 pl-16"
+            className="cursor-pointer flex items-center justify-center group py-1"
             title="Jeev Ruthi Collection Flagship"
           >
             <div className="w-26 h-26 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
