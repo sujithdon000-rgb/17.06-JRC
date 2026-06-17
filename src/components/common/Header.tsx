@@ -107,16 +107,18 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           {/* BRAND LOGO ONLY (No text, No Tagline as required) */}
-          <div 
-            onClick={() => onNavigate('home')} 
-            className="cursor-pointer flex items-center justify-center group py-1"
-            title="Jeev Ruthi Collection Flagship"
-          >
-<div className="flex items-center justify-center mr-10 bg-red-500">
+         <div
+  onClick={() => onNavigate('home')}
+  className="cursor-pointer mr-8 flex-shrink-0"
+>
   <img
     src="/logo.png"
     alt="Jeev Ruthi Collections"
-    style={{ width: '60px', height: '60px' }}
+    style={{
+      width: "70px",
+      height: "70px",
+      display: "block"
+    }}
   />
 </div>
           </div>
