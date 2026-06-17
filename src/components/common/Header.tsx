@@ -113,8 +113,11 @@ export const Header: React.FC<HeaderProps> = ({
             title="Jeev Ruthi Collection Flagship"
           >
             <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center border-2 border-[#D4AF37] shadow-md group-hover:scale-105 transition-transform duration-500">
-              {/* Premium Luxury Monogram Crown/Lotus Logo */}
-              <Crown className="w-6 h-6 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-500" />
+  <img
+    src="/logo.png"
+    alt="Jeev Ruthi Logo"
+    className="w-full h-full object-cover"
+  />
             </div>
           </div>
 
