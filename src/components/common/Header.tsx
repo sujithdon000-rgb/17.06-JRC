@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { CategoryType, SubcategoryType } from '../../types';
-import logo from '../../assets/logo.png';
 
 interface HeaderProps {
   onNavigate: (page: string, category?: CategoryType, subcategory?: SubcategoryType) => void;
