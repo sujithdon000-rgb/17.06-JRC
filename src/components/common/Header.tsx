@@ -115,7 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
 <div className="flex items-center justify-center mr-10">
   <img
-  src="/src/assets/logo.png"
+  src="/logo.png"
   alt="Jeev Ruthi Collections"
   className="h-20 w-20 object-contain border border-red-500"
   />
