@@ -336,7 +336,7 @@ export const Header: React.FC<HeaderProps> = ({
                       className="relative group cursor-pointer overflow-hidden rounded-xl bg-gray-100 shadow-md border border-gray-200 aspect-[3/4]"
                     >
                       <img
-  src="/promo1.jpg"
+  src="/promo2.jpg"
   alt="Kids Royal Party Wear Promo"
   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
 />
