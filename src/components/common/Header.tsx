@@ -112,7 +112,7 @@ export const Header: React.FC<HeaderProps> = ({
             className="cursor-pointer flex items-center justify-center group py-1"
             title="Jeev Ruthi Collection Flagship"
           >
-            <div className="flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+            <div className="w-16 h-16 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
   <img
     src="/logo.png"
     alt="Jeev Ruthi Logo"
