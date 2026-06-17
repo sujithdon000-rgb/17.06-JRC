@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* BRAND LOGO ONLY (No text, No Tagline as required) */}
           <div 
             onClick={() => onNavigate('home')} 
-            className="cursor-pointer flex items-center justify-center group py-1 mr-20"
+            className="cursor-pointer flex items-center justify-center group py-1"
             title="Jeev Ruthi Collection Flagship"
           >
             <div className="flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
