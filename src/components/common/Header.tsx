@@ -117,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
   <img
   src="/logo.png"
   alt="Jeev Ruthi Collections"
-  className="h-20 w-20 object-contain border border-red-500"
+  className="h-20 w-20 object-contain"
   />
 </div>
           </div>
