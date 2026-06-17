@@ -112,11 +112,11 @@ export const Header: React.FC<HeaderProps> = ({
             className="cursor-pointer flex items-center justify-center group py-1"
             title="Jeev Ruthi Collection Flagship"
           >
-<div className="flex items-center justify-center mr-10">
+<div className="flex items-center justify-center mr-10 bg-red-500">
   <img
-  src="/logo.png"
-  alt="Jeev Ruthi Collections"
-  className="h-14 w-14 object-contain"
+    src="/logo.png"
+    alt="Jeev Ruthi Collections"
+    style={{ width: '60px', height: '60px' }}
   />
 </div>
           </div>
