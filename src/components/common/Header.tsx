@@ -316,11 +316,11 @@ export const Header: React.FC<HeaderProps> = ({
                       }}
                       className="relative group cursor-pointer overflow-hidden rounded-xl bg-gray-100 shadow-md border border-gray-200 aspect-[3/4]"
                     >
-                      <img 
-                        src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop" 
-                        alt="Royal Silk Saree Promo"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                      />
+                      <img
+  src="/promo1.jpg"
+  alt="Royal Kids Promo"
+  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+/>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3">
                         <span className="text-[10px] font-extrabold text-[#D4AF37] tracking-widest">ROYAL TISSUE</span>
                         <span className="text-white text-xs font-serif font-bold">24K Zari Saree</span>
@@ -335,11 +335,11 @@ export const Header: React.FC<HeaderProps> = ({
                       }}
                       className="relative group cursor-pointer overflow-hidden rounded-xl bg-gray-100 shadow-md border border-gray-200 aspect-[3/4]"
                     >
-                      <img 
-                        src="https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?q=80&w=600&auto=format&fit=crop" 
-                        alt="Kids Royal Party Wear Promo"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                      />
+                      <img
+  src="/promo1.jpg"
+  alt="Kids Royal Party Wear Promo"
+  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+/>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3">
                         <span className="text-[10px] font-extrabold text-[#D4AF37] tracking-widest">KIDS GALA</span>
                         <span className="text-white text-xs font-serif font-bold">Gilded Ball Gowns</span>
