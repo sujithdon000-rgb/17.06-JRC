@@ -33,6 +33,7 @@ export const AdminPanel: React.FC = () => {
     returns, 
     categoryBanners, 
     offerConfig,
+    setOfferConfig,
     setProducts,
   } = useStore();
 
@@ -873,7 +874,7 @@ export const AdminPanel: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={offerConfig.isActive}
-                    onChange={(e) => console.log({ isActive: e.target.checked })}
+                    onChange={(e) => setOfferConfig({ ...offerConfig, isActive: e.target.checked })}
                     className="sr-only peer"
                   />
                   <div className="w-14 h-7 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#D4AF37]" />
@@ -881,31 +882,35 @@ export const AdminPanel: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-300 uppercase mb-2">Offer Headline Banner Text *</label>
+                <label className="block text-xs font-bold text-gray-300 uppercase mb-2">Offer Headline Banner Text</label>
                 <input
                   type="text"
                   value={offerConfig.title}
-                  onChange={(e) => console.log({ title: e.target.value })}
+                  onChange={(e) => setOfferConfig({ ...offerConfig, title: e.target.value })}
                   className="w-full p-3.5 bg-[#111] border border-[#333] rounded-2xl text-xs font-bold text-white font-cinzel"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-300 uppercase mb-2">Offer Subtitle Value Text *</label>
+                <label className="block text-xs font-bold text-gray-300 uppercase mb-2">Offer Subtitle Value Text</label>
                 <textarea
                   rows={2}
                   value={offerConfig.subtitle}
-                  onChange={(e) => console.log({ subtitle: e.target.value })}
+                  onChange={(e) => setOfferConfig({ ...offerConfig, subtitle: e.target.value })}
                   className="w-full p-3.5 bg-[#111] border border-[#333] rounded-2xl text-xs text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-300 uppercase mb-2">Main Offer Custom Banner URL *</label>
-                <input
-                  type="url"
-                  value={offerConfig.bannerImage}
-                  onChange={(e) => console.log({ bannerImage: e.target.value })}
+                <label className="block text-xs font-bold text-gray-300 uppercase mb-2">Offer Banner Images (One URL per line)</label>
+                <textarea
+                  rows={4}
+                  value={offerConfig.bannerImages?.join('\n') || ''}
+                  onChange={(e) => {
+                    const urls = e.target.value.split('\n').map(u => u.trim()).filter(u => u);
+                    setOfferConfig({ ...offerConfig, bannerImages: urls });
+                  }}
+                  placeholder="https://image1.jpg&#10;https://image2.jpg"
                   className="w-full p-3.5 bg-[#111] border border-[#333] rounded-2xl text-xs font-mono text-white"
                 />
               </div>

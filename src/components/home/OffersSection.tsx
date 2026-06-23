@@ -28,12 +28,14 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Fallback beautiful premium images for the slider if not enough are provided
-  const slideImages = [
-    offerConfig.bannerImage || 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1583391733958-6115915d31d4?q=80&w=1600&auto=format&fit=crop'
-  ];
+  // Use images from config, fallback to default if empty array
+  const slideImages = offerConfig.bannerImages?.length > 0 
+    ? offerConfig.bannerImages 
+    : [
+        'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1600&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1600&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1583391733958-6115915d31d4?q=80&w=1600&auto=format&fit=crop'
+      ];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -108,7 +110,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
         </motion.div>
 
         {/* Offer Banner Custom Image Layout with Slider */}
-        {offerConfig.bannerImage && (
+        {offerConfig.bannerImages && offerConfig.bannerImages.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.96 }}
             whileInView={{ opacity: 1, scale: 1 }}

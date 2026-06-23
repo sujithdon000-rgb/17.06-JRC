@@ -184,7 +184,7 @@ export interface CategoryBanner {
 export interface OfferSectionConfig {
   id?: string;
   isActive: boolean;
-  bannerImage: string;
+  bannerImages: string[];
   title: string;
   subtitle: string;
   expiryDate: string;
