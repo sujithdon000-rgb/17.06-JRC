@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Timer, ArrowRight, Tag, ShieldCheck } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Product } from '../../types';
@@ -11,28 +11,51 @@ interface OffersSectionProps {
 
 export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, onNavigateShop }) => {
   const { offerConfig, products } = useStore();
-  const [timeLeft, setTimeLeft] = useState({ days: 4, hours: 18, minutes: 32, seconds: 45 });
+  const calculateTimeLeft = () => {
+    const difference = +new Date(offerConfig.expiryDate || '2025-12-31') - +new Date();
+    let timeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    if (difference > 0) {
+      timeLeft = {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      };
+    }
+    return timeLeft;
+  };
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Fallback beautiful premium images for the slider if not enough are provided
+  const slideImages = [
+    offerConfig.bannerImage || 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1600&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1600&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1583391733958-6115915d31d4?q=80&w=1600&auto=format&fit=crop'
+  ];
 
   useEffect(() => {
-    // Premium countdown animation effect
     const interval = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
-        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        if (prev.days > 0) return { ...prev, days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
-        return prev;
-      });
+      setTimeLeft(calculateTimeLeft());
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [offerConfig.expiryDate]);
+
+  // Slider effect
+  useEffect(() => {
+    const slideInterval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slideImages.length);
+    }, 4000);
+    return () => clearInterval(slideInterval);
+  }, [slideImages.length]);
 
   if (!offerConfig.isActive) return null;
 
   const offerProducts = products.filter(p => offerConfig.productIds.includes(p.id) || p.is_offer_product);
 
   return (
-    <section className="bg-gradient-to-b from-[#161616] via-[#111111] to-[#1a1a1a] text-white py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans border-b border-[#2A2A2A]">
+    <section className="bg-gradient-to-b from-[#161616] via-[#111111] to-[#1a1a1a] text-white pt-10 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans border-b border-[#2A2A2A]">
       
       {/* Absolute decorative gold glow spheres */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
@@ -46,7 +69,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center max-w-3xl mx-auto mb-16"
+          className="text-center max-w-3xl mx-auto mb-8"
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-black tracking-widest uppercase mb-6 shadow-lg shadow-black/50">
             <Sparkles className="w-4 h-4 animate-spin" style={{ animationDuration: '4s' }} />
@@ -92,21 +115,29 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
           </div>
         </motion.div>
 
-        {/* Offer Banner Custom Image Layout */}
+        {/* Offer Banner Custom Image Layout with Slider */}
         {offerConfig.bannerImage && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.96 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#D4AF37]/30 mb-16 aspect-[16/7] sm:aspect-[21/9]"
+            className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#D4AF37]/30 mb-16 aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9]"
           >
-            <img 
-              src={offerConfig.bannerImage} 
-              alt={offerConfig.title} 
-              className="w-full h-full object-cover group-hover:scale-105 transition duration-1000"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-8 sm:p-12">
+            <AnimatePresence mode="wait">
+              <motion.img 
+                key={currentSlide}
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.2 }}
+                src={slideImages[currentSlide]} 
+                alt={offerConfig.title} 
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </AnimatePresence>
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-8 sm:p-12 z-10">
               <span className="text-xs font-black tracking-widest text-[#D4AF37] mb-2">ROYAL ARCHIVE SHOWCASE</span>
               <h3 className="font-cinzel text-2xl sm:text-4xl font-extrabold text-white max-w-xl">
                 SECURE HEIRLOOM WEAVES AT EXCLUSIVE PRIVILEGE
@@ -124,6 +155,17 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
                   <span>100% Certified Handloom Quality</span>
                 </div>
               </div>
+            </div>
+
+            {/* Slider Dots */}
+            <div className="absolute bottom-6 right-6 sm:bottom-12 sm:right-12 flex gap-2 z-20">
+              {slideImages.map((_, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${currentSlide === idx ? 'bg-[#D4AF37] w-8' : 'bg-white/50 hover:bg-white/80'}`}
+                />
+              ))}
             </div>
           </motion.div>
         )}
