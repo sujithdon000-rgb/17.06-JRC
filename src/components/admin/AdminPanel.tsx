@@ -95,7 +95,14 @@ export const AdminPanel: React.FC = () => {
       const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       
       // Expected hash for 'JrcAdmin@2026' is '4048284848d4986595c4a3a57db4b75e0fa95700cc6e66d19e75376b3315244a'
-      const validUsername = adminUsername.toLowerCase() === 'sujithjai007@gmail.com' || adminUsername.toLowerCase() === 'admin' || adminUsername.toLowerCase() === 'sujithjai007';
+      const allowedUsernames = [
+        'admin',
+        'sujithjai007',
+        'sujithjai007@gmail.com',
+        'yuvavishnu2426',
+        'yuvavishnu2426@gmail.com'
+      ];
+      const validUsername = allowedUsernames.includes(adminUsername.toLowerCase().trim());
       const validPasswordHash = '4048284848d4986595c4a3a57db4b75e0fa95700cc6e66d19e75376b3315244a';
       
       if (validUsername && hashHex === validPasswordHash) {

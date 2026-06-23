@@ -171,7 +171,8 @@ export async function checkIsAdmin(): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user || !user.email) return false;
 
-  if (user.email.toLowerCase() === 'sujithjai007@gmail.com') {
+  const allowedAdmins = ['sujithjai007@gmail.com', 'yuvavishnu2426@gmail.com'];
+  if (allowedAdmins.includes(user.email.toLowerCase())) {
     return true;
   }
 
