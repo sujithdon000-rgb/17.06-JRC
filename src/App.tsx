@@ -86,17 +86,16 @@ export function App() {
         if (session?.user) {
           // Load user profile
           const profile = await getUserProfile(session.user.id);
-          if (profile) {
-            setUser({
-              id: session.user.id,
-              name: profile.full_name || session.user.email?.split('@')[0] || 'Customer',
-              email: profile.email || session.user.email || '',
-              mobile: profile.mobile || session.user.phone || '',
-              isVerified: profile.is_verified ?? true,
-              authType: profile.auth_type || 'otp-mobile',
-              savedAddresses: [],
-            });
-          }
+          
+          setUser({
+            id: session.user.id,
+            name: profile?.full_name || session.user.email?.split('@')[0] || 'Customer',
+            email: profile?.email || session.user.email || '',
+            mobile: profile?.mobile || session.user.phone || '',
+            isVerified: profile?.is_verified ?? true,
+            authType: profile?.auth_type || 'otp-mobile',
+            savedAddresses: [],
+          });
 
           // Check admin status
           const isAdmin = await checkIsAdmin();
