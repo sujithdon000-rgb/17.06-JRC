@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Product, CategoryBanner, CategoryType, SubcategoryType } from '../../types';
+import { createProduct, updateProduct } from '../../lib/products';
 
 export const AdminPanel: React.FC = () => {
   const { 
@@ -32,7 +33,7 @@ export const AdminPanel: React.FC = () => {
     returns, 
     categoryBanners, 
     offerConfig,
-    
+    setProducts,
   } = useStore();
 
   const [passwordInput, setPasswordInput] = useState('');
@@ -138,7 +139,7 @@ export const AdminPanel: React.FC = () => {
     setProdIsOffer(false);
   };
 
-  const saveProductSubmit = (e: React.FormEvent) => {
+  const saveProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const imgs = prodImages.split(',').map(s => s.trim()).filter(Boolean);
     const discount = prodMrp > prodOffer ? Math.round(((prodMrp - prodOffer) / prodMrp) * 100) : 0;
@@ -151,25 +152,36 @@ export const AdminPanel: React.FC = () => {
       description: prodDescription,
       mrp_price: Number(prodMrp),
       offer_price: Number(prodOffer),
-      discountPercentage: discount,
+      discount_percentage: discount,
       sizes: ['Free Size', 'S', 'M', 'L', 'XL'],
-      colors: ['Luxury Gold', 'Onyx Black', 'Ruby Red'],
       stock: Number(prodStock),
       images: imgs.length > 0 ? imgs : ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop'],
       featured: prodFeatured,
       best_seller: prodBestSeller,
       new_arrival: prodNewArrival,
-      is_offer_product: prodIsOffer
+      is_offer_product: prodIsOffer,
+      is_active: true
     };
 
-    if (isAddingProduct) {
-      console.log(payload as any);
-    } else if (editingProduct) {
-      console.log({ ...payload, id: editingProduct.id } as any);
-    }
+    try {
+      if (isAddingProduct) {
+        const newProd = await createProduct({
+          ...payload,
+          id: `prod-${Date.now()}` // Generate a simple ID for now, or let DB handle it if not required. Wait, DB expects string.
+        });
+        setProducts([newProd as Product, ...products]);
+      } else if (editingProduct) {
+        const updatedProd = await updateProduct(editingProduct.id, payload);
+        setProducts(products.map(p => p.id === editingProduct.id ? updatedProd as Product : p));
+      }
 
-    setEditingProduct(null);
-    setIsAddingProduct(false);
+      setEditingProduct(null);
+      setIsAddingProduct(false);
+      alert('Product saved successfully!');
+    } catch (err: any) {
+      console.error(err);
+      alert('Error saving product: ' + err.message);
+    }
   };
 
   const handleBulkUploadSubmit = (e: React.FormEvent) => {
