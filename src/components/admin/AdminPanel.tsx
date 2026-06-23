@@ -182,7 +182,7 @@ export const AdminPanel: React.FC = () => {
     try {
       let finalProdId = '';
       if (isAddingProduct) {
-        finalProdId = `prod-${Date.now()}`;
+        finalProdId = crypto.randomUUID();
         const newProd = await createProduct({
           ...payload,
           id: finalProdId
