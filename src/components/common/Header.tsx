@@ -112,10 +112,11 @@ export const Header: React.FC<HeaderProps> = ({
             className="cursor-pointer flex items-center justify-center group py-1"
             title="Jeev Ruthi Collection Flagship"
           >
-            <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center border-2 border-[#D4AF37] shadow-md group-hover:scale-105 transition-transform duration-500">
-              {/* Premium Luxury Monogram Crown/Lotus Logo */}
-              <Crown className="w-6 h-6 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-500" />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="Jeev Ruthi Collection Logo" 
+              className="h-16 w-auto object-contain transition-transform duration-500 group-hover:scale-105"
+            />
           </div>
 
           {/* Main Navigation Links */}
