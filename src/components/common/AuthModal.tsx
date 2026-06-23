@@ -11,7 +11,7 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-type AuthStep = 'input' | 'otp' | 'success';
+type AuthStep = 'input' | 'otp' | 'success' | 'magic_link_sent';
 type AuthMethod = 'mobile' | 'email';
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
@@ -83,10 +83,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       if (result.error) {
         setError(result.error);
       } else {
-        setStep('otp');
-        setOtp(['', '', '', '', '', '']);
-        startResendTimer();
-        setTimeout(() => inputRefs.current[0]?.focus(), 300);
+        if (authMethod === 'email') {
+          setStep('magic_link_sent');
+        } else {
+          setStep('otp');
+          setOtp(['', '', '', '', '', '']);
+          startResendTimer();
+          setTimeout(() => inputRefs.current[0]?.focus(), 300);
+        }
       }
     } catch {
       setError('Failed to send OTP. Please try again.');
@@ -307,6 +311,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   </button>
                 </div>
               </>
+            )}
+
+            {/* ── MAGIC LINK SENT STEP ──────────────────────────────────────── */}
+            {step === 'magic_link_sent' && (
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                <div className="text-center mb-6 mt-4">
+                  <div className="w-16 h-16 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] border-2 border-[#D4AF37]/30 flex items-center justify-center mx-auto mb-4">
+                    <Mail className="w-8 h-8" />
+                  </div>
+                  <h3 className="font-cinzel font-extrabold text-lg text-[#111] uppercase tracking-widest">Link Sent</h3>
+                  <p className="text-sm text-gray-600 mt-4 leading-relaxed px-4">
+                    We've securely sent a magic sign-in link to <br/><span className="font-bold text-[#D4AF37]">{inputValue}</span>.
+                  </p>
+                  <p className="text-[11px] text-gray-500 mt-4 font-medium px-4">
+                    Check your inbox and click the link to automatically log in. You can close this window.
+                  </p>
+                </div>
+                <button
+                  onClick={() => onClose()}
+                  className="w-full bg-[#111111] text-[#D4AF37] hover:bg-white transition duration-300 py-3.5 rounded-xl font-cinzel font-bold text-xs tracking-widest shadow-lg flex items-center justify-center cursor-pointer mt-6 border border-[#111]"
+                >
+                  CLOSE WINDOW
+                </button>
+              </motion.div>
             )}
 
             {/* ── OTP STEP ──────────────────────────────────────── */}
