@@ -71,21 +71,13 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-8"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-black tracking-widest uppercase mb-6 shadow-lg shadow-black/50">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] text-xs font-black tracking-widest uppercase shadow-lg shadow-black/50">
             <Sparkles className="w-4 h-4 animate-spin" style={{ animationDuration: '4s' }} />
             <span>EXCLUSIVELY PRIVILEGED SOIRÉE</span>
           </div>
 
-          <h1 className="font-cinzel text-3xl sm:text-5xl font-extrabold tracking-wider text-white mb-4 leading-tight">
-            {offerConfig.title}
-          </h1>
-          
-          <p className="text-gray-300 text-sm sm:text-base leading-relaxed font-light max-w-2xl mx-auto">
-            {offerConfig.subtitle}
-          </p>
-
           {/* Admin Countdown Control Timer Box */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
             <div className="flex items-center gap-2 bg-[#222222]/80 border border-[#D4AF37]/30 px-5 py-3 rounded-2xl shadow-xl">
               <Timer className="w-5 h-5 text-[#D4AF37] animate-pulse" />
               <span className="text-xs font-semibold tracking-widest text-gray-300">OFFER EXPIRING IN:</span>
@@ -122,7 +114,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#D4AF37]/30 mb-16 aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9]"
+            className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#D4AF37]/30 mb-16 aspect-[1/1] sm:aspect-[4/3] lg:aspect-[16/9]"
           >
             <AnimatePresence mode="wait">
               <motion.img 
