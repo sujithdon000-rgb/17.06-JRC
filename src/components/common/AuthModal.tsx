@@ -161,8 +161,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   const handleOtpPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (pasted.length === 6) {
+    const expectedLength = authMethod === 'mobile' ? 6 : 8;
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, expectedLength);
+    if (pasted.length === expectedLength) {
       setOtp(pasted.split(''));
     }
   };
@@ -181,7 +182,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       if (result.error) {
         setError(result.error);
       } else {
-        setOtp(['', '', '', '', '', '']);
+        setOtp(Array(authMethod === 'mobile' ? 6 : 8).fill(''));
         startResendTimer();
         inputRefs.current[0]?.focus();
       }
