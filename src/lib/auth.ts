@@ -169,12 +169,12 @@ export async function updateUserProfile(
  */
 export async function checkIsAdmin(): Promise<boolean> {
   const user = await getCurrentUser();
-  if (!user) return false;
+  if (!user || !user.email) return false;
 
   const { data } = await supabase
     .from('admin_users')
     .select('id')
-    .eq('user_id', user.id)
+    .eq('email', user.email)
     .eq('is_active', true)
     .single();
 
