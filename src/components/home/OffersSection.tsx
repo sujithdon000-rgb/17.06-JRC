@@ -114,7 +114,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#D4AF37]/30 mb-16 aspect-[1/1] sm:aspect-[4/3] lg:aspect-[16/9]"
+            className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#D4AF37]/30 mb-16 aspect-[4/3] sm:aspect-[16/7] lg:aspect-[21/9] xl:aspect-[24/9]"
           >
             <AnimatePresence mode="wait">
               <motion.img 
