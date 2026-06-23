@@ -65,15 +65,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <div 
                 onClick={() => onNavigate('home')} 
                 className="cursor-pointer inline-block group mb-6"
-                title="Jeev Ruthi Collection"
+                title="Flagship Crown Logo"
               >
-<div className="w-28 h-28 flex items-center justify-center">
-  <img
-    src="/logo.png"
-    alt="Jeev Ruthi Logo"
-    className="w-full h-full object-contain"
-  />
-</div>
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#AA771C] flex items-center justify-center p-0.5 shadow-xl shadow-amber-900/20">
+                  <div className="w-full h-full bg-[#111111] rounded-full flex items-center justify-center">
+                    <Crown className="w-8 h-8 text-[#D4AF37] group-hover:scale-110 transition duration-500" />
+                  </div>
+                </div>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
                 The ultimate benchmark of unparalleled luxury fashion, handcrafted handloom weaves, and elite children’s ceremonial couture.

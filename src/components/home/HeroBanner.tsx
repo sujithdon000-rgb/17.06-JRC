@@ -68,11 +68,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onNavigateShop }) => {
         >
           {/* Subtitle Emblem */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-[#D4AF37]/50 text-[#D4AF37] text-xs font-black tracking-widest uppercase mb-6 shadow-xl">
-           <img
-  src="/logo.png"
-  alt="Jeev Ruthi Logo"
-  className="w-4 h-4 object-contain"
-/>
+            <Crown className="w-4 h-4 text-[#D4AF37]" />
             <span>PREMIUM LUXURY COUTURE — 2026</span>
           </div>
 

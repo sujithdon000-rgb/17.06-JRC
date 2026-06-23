@@ -66,6 +66,13 @@ export function App() {
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
 
+  // ── Browser URL Routing ──────────────────────────────────────────
+  useEffect(() => {
+    if (window.location.pathname === '/admin') {
+      setCurrentPage('admin');
+    }
+  }, []);
+
   // ── Supabase Auth Listener & Bootstrap ──────────────────────────
   useEffect(() => {
     // Load public product catalog & banners immediately (no auth required)

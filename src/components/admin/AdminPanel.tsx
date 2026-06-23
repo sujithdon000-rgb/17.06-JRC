@@ -78,58 +78,17 @@ export const AdminPanel: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full bg-[#1A1A1A] border-2 border-[#D4AF37]/40 rounded-3xl p-8 sm:p-10 shadow-2xl relative z-10"
+          className="max-w-md w-full bg-[#1A1A1A] border-2 border-[#D4AF37]/40 rounded-3xl p-8 sm:p-10 shadow-2xl relative z-10 text-center space-y-6"
         >
-          <div className="text-center space-y-3 mb-8">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#D4AF37] to-[#FCF6BA] flex items-center justify-center mx-auto shadow-xl">
-              <Lock className="w-8 h-8 text-[#111]" />
-            </div>
-            <h2 className="font-cinzel text-2xl font-extrabold text-white tracking-widest">
-              ADMINISTRATIVE VAULT
-            </h2>
-            <p className="text-xs text-gray-400 font-medium tracking-wider">
-              Authorize securely to manage products, automated category lookbooks, and webhook pipelines
-            </p>
+          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#D4AF37] to-[#FCF6BA] flex items-center justify-center mx-auto shadow-xl">
+            <Lock className="w-8 h-8 text-[#111]" />
           </div>
-
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (passwordInput.length > 0) useStore.setState({ isAdminAuth: true }); else setAuthError(true);
-          }} className="space-y-6">
-            <div>
-              <label className="block text-xs font-black tracking-widest text-[#D4AF37] uppercase mb-2">
-                MASTER CONCIERGE PASSWORD
-              </label>
-              <input
-                type="password"
-                required
-                autoFocus
-                placeholder="••••••••"
-                value={passwordInput}
-                onChange={(e) => {
-                  setPasswordInput(e.target.value);
-                  setAuthError(false);
-                }}
-                className="w-full px-4 py-3.5 bg-[#111111] border border-[#333] rounded-2xl text-sm font-mono text-white focus:outline-none focus:border-[#D4AF37] transition"
-              />
-              {authError && (
-                <span className="text-[11px] text-red-500 font-bold block mt-1 animate-pulse">✕ Master Key incorrect. Please try again.</span>
-              )}
-            </div>
-
-            <div className="bg-[#111] p-3 rounded-xl border border-[#333] text-[10px] text-gray-400 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#D4AF37] shrink-0" />
-              <span>Demo Master Key is fully enabled as <strong>admin123</strong> or <strong>premium2026</strong>.</span>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-[#D4AF37] text-[#111] hover:bg-white transition duration-300 py-4 rounded-2xl font-cinzel font-black text-xs tracking-widest uppercase shadow-xl flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>AUTHORIZE SECURE ENTRANCE</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
+          <h2 className="font-cinzel text-2xl font-extrabold text-[#D4AF37] tracking-widest uppercase">
+            UNAUTHORIZED ACCESS
+          </h2>
+          <p className="text-sm text-gray-400 font-medium tracking-wider">
+            You must log in as an Administrator via the main website header to access this vault.
+          </p>
         </motion.div>
       </div>
     );
