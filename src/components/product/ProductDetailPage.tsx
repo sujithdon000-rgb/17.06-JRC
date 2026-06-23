@@ -76,6 +76,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     .filter(p => p.id !== product.id && (p.category === product.category || p.subcategory === product.subcategory))
     .slice(0, 4);
 
+  const activeColorVariant = product.colorVariants?.find(cv => cv.name === selectedColor);
+  const activeImages = activeColorVariant && activeColorVariant.images.length > 0 
+    ? activeColorVariant.images 
+    : product.images;
+
+  const isVideo = (url: string) => url.endsWith('.mp4') || url.endsWith('.webm');
+  const isOutOfStock = product.stock <= 0;
+
   return (
     <div className="bg-[#FCFCFC] text-[#111111] min-h-screen font-sans pb-32">
       
@@ -118,7 +126,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               
               {/* IMPORTANT FIX: THUMBNAIL IMAGES (Left Column) */}
               <div className="order-2 md:order-1 md:col-span-2 flex flex-row md:flex-col gap-3 overflow-x-auto md:overflow-y-auto max-h-[600px] pb-2 md:pb-0 sm:pr-2">
-                {product.images.map((img, idx) => (
+                {activeImages.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleThumbnailClick(img)}
@@ -128,7 +136,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
-                    <img src={img} alt={`${product.name} thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                    {isVideo(img) ? (
+                       <video src={img} className="w-full h-full object-cover" muted playsInline />
+                    ) : (
+                       <img src={img} alt={`${product.name} thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -142,11 +154,22 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   transition={{ duration: 0.3 }}
                   className="w-full h-full cursor-crosshair flex items-center justify-center overflow-hidden"
                 >
-                  <img
-                    src={mainImage}
-                    alt={product.name}
-                    className="w-full h-full object-cover object-top transition-transform duration-300"
-                  />
+                  {isVideo(mainImage) ? (
+                    <video
+                      src={mainImage}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover object-center transition-transform duration-300"
+                    />
+                  ) : (
+                    <img
+                      src={mainImage}
+                      alt={product.name}
+                      className="w-full h-full object-cover object-top transition-transform duration-300"
+                    />
+                  )}
                 </motion.div>
 
                 {/* Floating Discount Badge */}
@@ -279,14 +302,17 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 {product.sizes.map((size) => (
                   <button
                     key={size}
+                    disabled={isOutOfStock}
                     onClick={() => setSelectedSize(size)}
-                    className={`px-5 py-3 rounded-2xl text-xs font-bold tracking-wider transition duration-300 border-2 cursor-pointer ${
-                      selectedSize === size
-                        ? 'bg-[#111111] text-[#D4AF37] border-[#111111] shadow-lg scale-105'
-                        : 'bg-gray-50 text-gray-800 border-gray-200 hover:border-black'
+                    className={`px-5 py-3 rounded-2xl text-xs font-bold tracking-wider transition duration-300 border-2 ${
+                      isOutOfStock 
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                        : selectedSize === size
+                          ? 'bg-[#111111] text-[#D4AF37] border-[#111111] shadow-lg scale-105 cursor-pointer'
+                          : 'bg-gray-50 text-gray-800 border-gray-200 hover:border-black cursor-pointer'
                     }`}
                   >
-                    {size}
+                    {size} {isOutOfStock && '(Out of Stock)'}
                   </button>
                 ))}
               </div>
@@ -360,11 +386,16 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               
               <div className="grid grid-cols-12 gap-3">
                 <button
+                  disabled={isOutOfStock}
                   onClick={() => onAddToCart(product, selectedSize, selectedColor, selectedColorCode, quantity)}
-                  className="col-span-10 bg-[#111111] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white transition duration-300 py-4 rounded-2xl font-cinzel font-bold text-xs tracking-widest uppercase shadow-lg flex items-center justify-center gap-2 group cursor-pointer"
+                  className={`col-span-10 transition duration-300 py-4 rounded-2xl font-cinzel font-bold text-xs tracking-widest uppercase shadow-lg flex items-center justify-center gap-2 group ${
+                    isOutOfStock 
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#111111] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white cursor-pointer'
+                  }`}
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>ADD TO CONCIERGE BAG</span>
+                  <span>{isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CONCIERGE BAG'}</span>
                 </button>
 
                 <button
@@ -379,11 +410,16 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </div>
 
               <button
+                disabled={isOutOfStock}
                 onClick={() => onBuyNow(product, selectedSize, selectedColor, selectedColorCode, quantity)}
-                className="w-full bg-gradient-to-r from-[#D4AF37] via-[#FCF6BA] to-[#AA771C] text-[#111] hover:opacity-95 transition duration-300 py-4 rounded-2xl font-cinzel font-black text-xs tracking-widest uppercase shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+                className={`w-full transition duration-300 py-4 rounded-2xl font-cinzel font-black text-xs tracking-widest uppercase shadow-xl flex items-center justify-center gap-2 ${
+                  isOutOfStock 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-[#D4AF37] via-[#FCF6BA] to-[#AA771C] text-[#111] hover:opacity-95 cursor-pointer'
+                }`}
               >
                 <Sparkles className="w-4 h-4 text-[#111]" />
-                <span>SECURE INSTANT BUY NOW (UPI / COD)</span>
+                <span>{isOutOfStock ? 'CURRENTLY UNAVAILABLE' : 'SECURE INSTANT BUY NOW (UPI / COD)'}</span>
               </button>
 
             </div>

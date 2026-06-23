@@ -55,7 +55,12 @@ export const AdminPanel: React.FC = () => {
   const [prodMrp, setProdMrp] = useState(24999);
   const [prodOffer, setProdOffer] = useState(18499);
   const [prodStock, setProdStock] = useState(12);
-  const [prodImages, setProdImages] = useState('https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop');
+  const [prodImage1, setProdImage1] = useState('https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop');
+  const [prodImage2, setProdImage2] = useState('');
+  const [prodImage3, setProdImage3] = useState('');
+  const [prodImage4, setProdImage4] = useState('');
+  const [prodVideo, setProdVideo] = useState('');
+  const [prodColorVariants, setProdColorVariants] = useState<{name: string, code: string, image: string}[]>([]);
   const [prodFeatured, setProdFeatured] = useState(true);
   const [prodBestSeller, setProdBestSeller] = useState(false);
   const [prodNewArrival, setProdNewArrival] = useState(true);
@@ -114,7 +119,12 @@ export const AdminPanel: React.FC = () => {
     setProdMrp(p.mrp_price);
     setProdOffer(p.offer_price);
     setProdStock(p.stock);
-    setProdImages(p.images.join(', '));
+    setProdImage1(p.images[0] || '');
+    setProdImage2(p.images[1] || '');
+    setProdImage3(p.images[2] || '');
+    setProdImage4(p.images[3] || '');
+    setProdVideo(p.images.find(img => img.endsWith('.mp4') || img.endsWith('.webm')) || '');
+    setProdColorVariants(p.colorVariants?.map(cv => ({name: cv.name, code: cv.code, image: cv.images[0] || ''})) || []);
     setProdFeatured(p.featured);
     setProdBestSeller(p.best_seller);
     setProdNewArrival(p.new_arrival);
@@ -132,7 +142,12 @@ export const AdminPanel: React.FC = () => {
     setProdMrp(19999);
     setProdOffer(14999);
     setProdStock(10);
-    setProdImages('https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop');
+    setProdImage1('https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop');
+    setProdImage2('');
+    setProdImage3('');
+    setProdImage4('');
+    setProdVideo('');
+    setProdColorVariants([]);
     setProdFeatured(false);
     setProdBestSeller(false);
     setProdNewArrival(true);
@@ -141,7 +156,8 @@ export const AdminPanel: React.FC = () => {
 
   const saveProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const imgs = prodImages.split(',').map(s => s.trim()).filter(Boolean);
+    const rawImgs = [prodImage1, prodImage2, prodImage3, prodImage4, prodVideo];
+    const imgs = rawImgs.map(s => s.trim()).filter(Boolean);
     const discount = prodMrp > prodOffer ? Math.round(((prodMrp - prodOffer) / prodMrp) * 100) : 0;
 
     const payload = {
@@ -164,15 +180,36 @@ export const AdminPanel: React.FC = () => {
     };
 
     try {
+      let finalProdId = '';
       if (isAddingProduct) {
+        finalProdId = `prod-${Date.now()}`;
         const newProd = await createProduct({
           ...payload,
-          id: `prod-${Date.now()}` // Generate a simple ID for now, or let DB handle it if not required. Wait, DB expects string.
+          id: finalProdId
         });
         setProducts([newProd as Product, ...products]);
       } else if (editingProduct) {
+        finalProdId = editingProduct.id;
         const updatedProd = await updateProduct(editingProduct.id, payload);
         setProducts(products.map(p => p.id === editingProduct.id ? updatedProd as Product : p));
+      }
+
+      if (prodColorVariants.length > 0 && finalProdId) {
+        const { createColorVariant } = await import('../../lib/products');
+        for (let i = 0; i < prodColorVariants.length; i++) {
+           const cv = prodColorVariants[i];
+           try {
+             await createColorVariant({
+               product_id: finalProdId,
+               name: cv.name,
+               code: cv.code,
+               images: [cv.image].filter(Boolean),
+               display_order: i
+             });
+           } catch(e) { console.error('Color variant error:', e); }
+        }
+        // Force reload to get updated color variants
+        window.location.reload();
       }
 
       setEditingProduct(null);
@@ -889,8 +926,46 @@ export const AdminPanel: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 uppercase mb-1.5 font-bold">High-Res Unsplash Image URLs (Comma separated) *</label>
-                  <input type="text" required value={prodImages} onChange={e => setProdImages(e.target.value)} placeholder="https://images.unsplash.com/..." className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
+                  <label className="block text-gray-300 uppercase mb-1.5 font-bold">Media URLs *</label>
+                  <div className="space-y-2">
+                    <input type="text" required value={prodImage1} onChange={e => setProdImage1(e.target.value)} placeholder="Image 1 (Main) URL" className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
+                    <input type="text" value={prodImage2} onChange={e => setProdImage2(e.target.value)} placeholder="Image 2 URL (Optional)" className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
+                    <input type="text" value={prodImage3} onChange={e => setProdImage3(e.target.value)} placeholder="Image 3 URL (Optional)" className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
+                    <input type="text" value={prodImage4} onChange={e => setProdImage4(e.target.value)} placeholder="Image 4 URL (Optional)" className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
+                    <input type="text" value={prodVideo} onChange={e => setProdVideo(e.target.value)} placeholder="Video URL (Optional, .mp4)" className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-[#333]">
+                  <label className="block text-gray-300 uppercase mb-3 font-bold flex justify-between items-center">
+                    <span>Color Variants</span>
+                    <button type="button" onClick={() => setProdColorVariants([...prodColorVariants, {name: '', code: '#111111', image: ''}])} className="flex items-center gap-1 text-xs bg-[#D4AF37] text-black px-2 py-1 rounded">
+                      <Plus className="w-3 h-3" /> Add Color
+                    </button>
+                  </label>
+                  <div className="space-y-3">
+                    {prodColorVariants.map((cv, idx) => (
+                      <div key={idx} className="flex gap-2 items-start bg-[#111] p-3 rounded-xl border border-[#333]">
+                        <div className="flex-1 space-y-2">
+                          <input type="text" value={cv.name} onChange={e => {
+                            const newCvs = [...prodColorVariants]; newCvs[idx].name = e.target.value; setProdColorVariants(newCvs);
+                          }} placeholder="Color Name (e.g. Royal Red)" className="w-full p-2 bg-[#1A1A1A] border border-[#333] rounded text-white text-sm" />
+                          <input type="text" value={cv.image} onChange={e => {
+                            const newCvs = [...prodColorVariants]; newCvs[idx].image = e.target.value; setProdColorVariants(newCvs);
+                          }} placeholder="Image URL for this color" className="w-full p-2 bg-[#1A1A1A] border border-[#333] rounded text-white text-sm" />
+                        </div>
+                        <input type="color" value={cv.code} onChange={e => {
+                          const newCvs = [...prodColorVariants]; newCvs[idx].code = e.target.value; setProdColorVariants(newCvs);
+                        }} className="w-10 h-10 rounded cursor-pointer border-0 p-0" />
+                        <button type="button" onClick={() => {
+                          const newCvs = [...prodColorVariants]; newCvs.splice(idx, 1); setProdColorVariants(newCvs);
+                        }} className="p-2 text-red-400 hover:bg-red-400/10 rounded">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    {prodColorVariants.length === 0 && <p className="text-sm text-gray-500 italic">No color variants added.</p>}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[#333]">
