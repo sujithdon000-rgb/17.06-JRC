@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Timer, ArrowRight, Tag, ShieldCheck } from 'lucide-react';
+import { Sparkles, Timer, ArrowRight, Tag } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Product } from '../../types';
 
@@ -112,52 +112,35 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
         {/* Offer Banner Custom Image Layout with Slider */}
         {offerConfig.bannerImages && offerConfig.bannerImages.length > 0 && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.96 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#D4AF37]/30 mb-16 aspect-[4/3] sm:aspect-[16/7] lg:aspect-[21/9] xl:aspect-[24/9]"
+            className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#D4AF37]/30 mb-16 cursor-pointer group bg-[#111]"
+            onClick={() => onNavigateShop('Offers')}
           >
-            <AnimatePresence mode="wait">
-              <motion.img 
-                key={currentSlide}
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.2 }}
-                src={slideImages[currentSlide]} 
-                alt={offerConfig.title} 
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            </AnimatePresence>
-            
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-8 sm:p-12 z-10">
-              <span className="text-xs font-black tracking-widest text-[#D4AF37] mb-2">ROYAL ARCHIVE SHOWCASE</span>
-              <h3 className="font-cinzel text-2xl sm:text-4xl font-extrabold text-white max-w-xl">
-                SECURE HEIRLOOM WEAVES AT EXCLUSIVE PRIVILEGE
-              </h3>
-              <div className="mt-6 flex flex-wrap items-center gap-4">
-                <button 
-                  onClick={() => onNavigateShop('Offers')}
-                  className="bg-[#D4AF37] text-[#111111] hover:bg-white transition px-8 py-3.5 rounded-full font-bold text-xs tracking-widest shadow-xl flex items-center gap-2 group"
-                >
-                  <span>EXPLORE PRIVILEGE ARCHIVE</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-                </button>
-                <div className="flex items-center gap-2 text-xs font-light text-gray-300">
-                  <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-                  <span>100% Certified Handloom Quality</span>
-                </div>
-              </div>
+            <div className="grid w-full h-auto">
+              <AnimatePresence>
+                <motion.img 
+                  key={currentSlide}
+                  initial={{ opacity: 0, scale: 1.02 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1.2 }}
+                  src={slideImages[currentSlide]} 
+                  alt={offerConfig.title} 
+                  className="col-start-1 row-start-1 w-full h-auto object-contain block transition duration-1000 group-hover:scale-[1.02]"
+                />
+              </AnimatePresence>
             </div>
 
             {/* Slider Dots */}
-            <div className="absolute bottom-6 right-6 sm:bottom-12 sm:right-12 flex gap-2 z-20">
+            <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 flex gap-2 z-20 drop-shadow-lg">
               {slideImages.map((_, idx) => (
                 <button 
                   key={idx}
-                  onClick={() => setCurrentSlide(idx)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${currentSlide === idx ? 'bg-[#D4AF37] w-8' : 'bg-white/50 hover:bg-white/80'}`}
+                  onClick={(e) => { e.stopPropagation(); setCurrentSlide(idx); }}
+                  className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-all duration-300 shadow-xl ${currentSlide === idx ? 'bg-[#D4AF37] w-6 sm:w-8' : 'bg-white/70 hover:bg-white'}`}
                 />
               ))}
             </div>
