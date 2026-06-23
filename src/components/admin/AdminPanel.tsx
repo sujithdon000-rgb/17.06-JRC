@@ -23,6 +23,7 @@ import {
 import { useStore } from '../../store/useStore';
 import { Product, CategoryBanner, CategoryType, SubcategoryType } from '../../types';
 import { createProduct, updateProduct } from '../../lib/products';
+import { supabase } from '../../lib/supabase';
 
 export const AdminPanel: React.FC = () => {
   const { 
@@ -295,7 +296,11 @@ export const AdminPanel: React.FC = () => {
             })}
 
             <button
-              onClick={() => useStore.setState({ isAdminAuth: false })}
+              onClick={async () => {
+                await supabase.auth.signOut();
+                useStore.setState({ isAdminAuth: false, session: null, user: null });
+                window.location.reload();
+              }}
               className="px-4 py-2.5 rounded-xl bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white transition cursor-pointer font-extrabold ml-2"
             >
               LOGOUT

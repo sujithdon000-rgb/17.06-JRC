@@ -109,18 +109,18 @@ export const Header: React.FC<HeaderProps> = ({
           {/* BRAND LOGO ONLY (No text, No Tagline as required) */}
           <div 
             onClick={() => onNavigate('home')} 
-            className="cursor-pointer flex items-center justify-center group py-1"
+            className="cursor-pointer flex items-center lg:flex-1 justify-start group py-1"
             title="Jeev Ruthi Collection Flagship"
           >
             <img 
               src="/logo.png" 
               alt="Jeev Ruthi Collection Logo" 
-              className="h-16 w-auto object-contain transition-transform duration-500 group-hover:scale-105"
+              className="h-20 md:h-24 w-auto object-contain transition-transform duration-500 group-hover:scale-105"
             />
           </div>
 
           {/* Main Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex flex-1 justify-center items-center gap-8">
             <button
               onClick={() => onNavigate('home')}
               className={`text-sm tracking-widest font-semibold transition py-2 relative ${
@@ -280,7 +280,7 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
 
           {/* Right Side: 2 Promotional Fashion Images + Small Floating Cards + 3D Hover Animation */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 lg:flex-1 justify-end">
             
             {/* Promotional Floating Visual Trigger */}
             <div 
