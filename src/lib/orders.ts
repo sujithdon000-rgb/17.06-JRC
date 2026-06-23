@@ -105,7 +105,10 @@ export async function fetchUserOrders(userId: string) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error('Failed to fetch user orders:', error);
+    return [];
+  }
   return data ?? [];
 }
 
@@ -170,7 +173,10 @@ export async function fetchAllOrdersAdmin() {
     `)
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error('Failed to fetch admin orders:', error);
+    return [];
+  }
   return data ?? [];
 }
 
@@ -382,7 +388,10 @@ export async function fetchUserNotifications(userId: string) {
     .order('created_at', { ascending: false })
     .limit(50);
 
-  if (error) throw error;
+  if (error) {
+    console.error('Failed to fetch notifications:', error);
+    return [];
+  }
   return data ?? [];
 }
 
