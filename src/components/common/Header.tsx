@@ -95,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
           ? 'bg-white/95 backdrop-blur-md shadow-lg shadow-black/5 py-3 border-b border-gray-100' 
           : 'bg-white py-4 border-b border-gray-100'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-0 flex items-center justify-between">
           
           {/* Mobile Menu Button */}
           <button 
@@ -112,14 +112,17 @@ export const Header: React.FC<HeaderProps> = ({
             className="cursor-pointer flex items-center justify-center group py-1"
             title="Jeev Ruthi Collection Flagship"
           >
-            <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center border-2 border-[#D4AF37] shadow-md group-hover:scale-105 transition-transform duration-500">
-              {/* Premium Luxury Monogram Crown/Lotus Logo */}
-              <Crown className="w-6 h-6 text-[#D4AF37] group-hover:rotate-12 transition-transform duration-500" />
+            <div className="w-26 h-26 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+  <img
+    src="/logo.png"
+    alt="Jeev Ruthi Logo"
+    className="w-26 h-26 object-cover"
+  />
             </div>
           </div>
 
           {/* Main Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-10 ml-8">
             <button
               onClick={() => onNavigate('home')}
               className={`text-sm tracking-widest font-semibold transition py-2 relative ${
@@ -283,7 +286,7 @@ export const Header: React.FC<HeaderProps> = ({
             
             {/* Promotional Floating Visual Trigger */}
             <div 
-              className="relative hidden xl:flex items-center"
+              className="relative flex items-center ml-6"
               onMouseEnter={() => setPromoHovered(true)}
               onMouseLeave={() => setPromoHovered(false)}
             >
@@ -313,14 +316,14 @@ export const Header: React.FC<HeaderProps> = ({
                       }}
                       className="relative group cursor-pointer overflow-hidden rounded-xl bg-gray-100 shadow-md border border-gray-200 aspect-[3/4]"
                     >
-                      <img 
-                        src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop" 
-                        alt="Royal Silk Saree Promo"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                      />
+                      <img
+  src="/promo1.jpg"
+  alt="Royal Kids Promo"
+  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+/>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3">
-                        <span className="text-[10px] font-extrabold text-[#D4AF37] tracking-widest">ROYAL TISSUE</span>
-                        <span className="text-white text-xs font-serif font-bold">24K Zari Saree</span>
+                        <span className="text-[10px] font-extrabold text-[#D4AF37] tracking-widest">JEEV RUTHI</span>
+                        <span className="text-white text-xs font-serif font-bold">Premium Collection</span>
                       </div>
                     </div>
 
@@ -332,11 +335,11 @@ export const Header: React.FC<HeaderProps> = ({
                       }}
                       className="relative group cursor-pointer overflow-hidden rounded-xl bg-gray-100 shadow-md border border-gray-200 aspect-[3/4]"
                     >
-                      <img 
-                        src="https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?q=80&w=600&auto=format&fit=crop" 
-                        alt="Kids Royal Party Wear Promo"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                      />
+                      <img
+  src="/promo2.jpg"
+  alt="Kids Royal Party Wear Promo"
+  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+/>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3">
                         <span className="text-[10px] font-extrabold text-[#D4AF37] tracking-widest">KIDS GALA</span>
                         <span className="text-white text-xs font-serif font-bold">Gilded Ball Gowns</span>
@@ -409,13 +412,14 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               {/* Admin Dashboard Portal Link */}
-              <button
-                onClick={() => onNavigate('admin')}
-                className="p-2 text-gray-500 hover:text-amber-600 transition rounded-full hover:bg-amber-50 focus:outline-none flex items-center gap-1"
-                title="Admin Control Panel"
-              >
-                <ShieldCheck className="w-5 h-5" />
-              </button>
+{/*
+<button
+  onClick={() => onNavigate('admin')}
+  className="p-2 text-gray-500 ..."
+>
+  <ShieldCheck className="w-5 h-5" />
+</button>
+*/}
 
             </div>
 
@@ -534,16 +538,18 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
 
                 <div className="pt-4 mt-2 border-t border-gray-200 flex items-center justify-around">
-                  <button 
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      onNavigate('admin');
-                    }}
-                    className="flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-[#111]"
-                  >
-                    <ShieldCheck className="w-4 h-4 text-amber-600" />
-                    <span>Admin Panel</span>
-                  </button>
+                  {/*
+<button
+  onClick={() => {
+    setMobileMenuOpen(false);
+    onNavigate('admin');
+  }}
+  className="flex items-center gap-2 ..."
+>
+  <ShieldCheck className="w-4 h-4 text-amber-600" />
+  <span>Admin Panel</span>
+</button>
+*/}
                   <a 
                     href="https://maps.app.goo.gl/QwoTg7hgNXX9gPp96"
                     target="_blank"
