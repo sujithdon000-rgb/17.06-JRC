@@ -83,14 +83,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       if (result.error) {
         setError(result.error);
       } else {
-        if (authMethod === 'email') {
-          setStep('magic_link_sent');
-        } else {
-          setStep('otp');
-          setOtp(['', '', '', '', '', '']);
-          startResendTimer();
-          setTimeout(() => inputRefs.current[0]?.focus(), 300);
-        }
+        setStep('otp');
+        setOtp(['', '', '', '', '', '']);
+        startResendTimer();
+        setTimeout(() => inputRefs.current[0]?.focus(), 300);
       }
     } catch {
       setError('Failed to send OTP. Please try again.');
