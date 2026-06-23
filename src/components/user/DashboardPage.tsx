@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Product, Order } from '../../types';
+import { supabase } from '../../lib/supabase';
 
 interface DashboardPageProps {
   onSelectProduct: (product: Product) => void;
@@ -122,9 +123,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
           </div>
 
           <button
-            onClick={() => {
+            onClick={async () => {
+              await supabase.auth.signOut();
               logoutUser();
-              onNavigateHome();
+              window.location.reload();
             }}
             className="bg-white/10 hover:bg-red-600/20 text-gray-300 hover:text-red-500 transition px-6 py-3 rounded-full font-bold text-xs flex items-center gap-2 border border-white/10 cursor-pointer"
           >
