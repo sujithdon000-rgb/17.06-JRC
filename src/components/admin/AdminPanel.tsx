@@ -6,7 +6,7 @@ import {
   Users, 
   RotateCcw, 
   Tag, 
-  Sparkles, 
+
   Layers, 
   Image as ImageIcon, 
   Plus, 
@@ -18,8 +18,7 @@ import {
   XCircle, 
   TrendingUp,
   FileSpreadsheet,
-  Lock,
-  ArrowRight
+  Lock
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Product, CategoryBanner, CategoryType, SubcategoryType } from '../../types';
@@ -36,8 +35,7 @@ export const AdminPanel: React.FC = () => {
     setProducts,
   } = useStore();
 
-  const [passwordInput, setPasswordInput] = useState('');
-  const [authError, setAuthError] = useState(false);
+
 
   // Admin tab state
   const [adminTab, setAdminTab] = useState<'dashboard' | 'products' | 'categories' | 'banners' | 'orders' | 'returns' | 'offers'>('dashboard');
