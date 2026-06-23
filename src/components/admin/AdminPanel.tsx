@@ -75,6 +75,42 @@ export const AdminPanel: React.FC = () => {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [bulkJsonText, setBulkJsonText] = useState('[\n  {\n    "name": "Bespoke Royal Raw Silk Kurti Set",\n    "sku": "JRC-BULK-001",\n    "category": "Women",\n    "subcategory": "Kurtis",\n    "description": "Master artisan handcrafted high fashion weave.",\n    "mrp_price": 15999,\n    "offer_price": 11999,\n    "discountPercentage": 25,\n    "sizes": ["S", "M", "L", "XL"],\n    "colors": ["Royal Gold", "Maroon"],\n    "stock": 15,\n    "images": ["https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=800&auto=format&fit=crop"],\n    "featured": true,\n    "best_seller": true,\n    "new_arrival": true,\n    "is_offer_product": false\n  }\n]');
 
+  // Custom Admin UI Auth State
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminLoginError, setAdminLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminLoginError('');
+    setIsLoggingIn(true);
+    
+    try {
+      // Hash the password to compare with our secure hash
+      const encoder = new TextEncoder();
+      const data = encoder.encode(adminPassword);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      // Expected hash for 'JrcAdmin@2026' is '4048284848d4986595c4a3a57db4b75e0fa95700cc6e66d19e75376b3315244a'
+      const validUsername = adminUsername.toLowerCase() === 'sujithjai007@gmail.com' || adminUsername.toLowerCase() === 'admin' || adminUsername.toLowerCase() === 'sujithjai007';
+      const validPasswordHash = '4048284848d4986595c4a3a57db4b75e0fa95700cc6e66d19e75376b3315244a';
+      
+      if (validUsername && hashHex === validPasswordHash) {
+        useStore.setState({ isAdminAuth: true });
+      } else {
+        setAdminLoginError('Invalid Administrator Credentials');
+      }
+    } catch (err) {
+      setAdminLoginError('Authentication failed');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+
   if (!isAdminAuth) {
     return (
       <div className="min-h-screen bg-[#111111] text-white flex items-center justify-center p-4 font-sans relative overflow-hidden">
@@ -89,11 +125,50 @@ export const AdminPanel: React.FC = () => {
             <Lock className="w-8 h-8 text-[#111]" />
           </div>
           <h2 className="font-cinzel text-2xl font-extrabold text-[#D4AF37] tracking-widest uppercase">
-            UNAUTHORIZED ACCESS
+            ADMINISTRATOR LOGIN
           </h2>
-          <p className="text-sm text-gray-400 font-medium tracking-wider">
-            You must log in as an Administrator via the main website header to access this vault.
+          <p className="text-sm text-gray-400 font-medium tracking-wider mb-6">
+            Enter your vault credentials to proceed.
           </p>
+
+          <form onSubmit={handleAdminLogin} className="space-y-4 text-left">
+            <div>
+              <label className="block text-xs font-bold text-gray-400 mb-1 tracking-wider uppercase">Username</label>
+              <input
+                type="text"
+                required
+                value={adminUsername}
+                onChange={(e) => setAdminUsername(e.target.value)}
+                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37] transition"
+                placeholder="admin"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-400 mb-1 tracking-wider uppercase">Password</label>
+              <input
+                type="password"
+                required
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37] transition"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {adminLoginError && (
+              <div className="text-red-400 text-sm font-bold text-center bg-red-400/10 py-2 rounded-lg">
+                {adminLoginError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className="w-full bg-gradient-to-r from-[#D4AF37] to-[#FCF6BA] text-[#111] font-bold tracking-wider py-3 rounded-xl hover:shadow-lg hover:shadow-[#D4AF37]/20 transition disabled:opacity-50 mt-4"
+            >
+              {isLoggingIn ? 'AUTHENTICATING...' : 'ACCESS VAULT'}
+            </button>
+          </form>
         </motion.div>
       </div>
     );

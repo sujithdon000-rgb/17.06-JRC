@@ -5,12 +5,10 @@ import {
   Heart, 
   User as UserIcon, 
   Search as SearchIcon, 
-  ShieldCheck, 
   Sparkles, 
   Menu, 
   X, 
-  ChevronDown,
-  Crown
+  ChevronDown
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { CategoryType, SubcategoryType } from '../../types';
@@ -33,7 +31,6 @@ export const Header: React.FC<HeaderProps> = ({
   const { cart, wishlist, user } = useStore();
   const [activeDropdown, setActiveDropdown] = useState<'Women' | 'Kids' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [promoHovered, setPromoHovered] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -282,71 +279,6 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Right Side: 2 Promotional Fashion Images + Small Floating Cards + 3D Hover Animation */}
           <div className="flex items-center gap-6 lg:flex-1 justify-end">
             
-            {/* Promotional Floating Visual Trigger */}
-            <div 
-              className="relative hidden xl:flex items-center"
-              onMouseEnter={() => setPromoHovered(true)}
-              onMouseLeave={() => setPromoHovered(false)}
-            >
-              <button className="flex items-center gap-2 bg-gradient-to-r from-[#D4AF37]/10 to-amber-500/10 border border-[#D4AF37]/30 px-3 py-1.5 rounded-full text-xs font-bold text-[#111] hover:bg-[#D4AF37] hover:text-white transition duration-300">
-                <Crown className="w-3.5 h-3.5 text-[#D4AF37] group-hover:text-white" />
-                <span>PREMIUM LOOKBOOK</span>
-              </button>
-
-              {/* 3D Floating Promotional Visual Cards */}
-              <AnimatePresence>
-                {promoHovered && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 15, rotateX: -15 }}
-                    animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 15, rotateX: -15 }}
-                    transition={{ duration: 0.4, type: 'spring', damping: 20 }}
-                    className="absolute top-full right-0 mt-3 w-96 bg-white/95 backdrop-blur-xl shadow-2xl rounded-2xl border border-[#D4AF37]/40 p-4 z-50 grid grid-cols-2 gap-3"
-                    style={{ perspective: 1000 }}
-                  >
-                    <div className="absolute -top-2 right-12 w-4 h-4 bg-white border-t border-l border-[#D4AF37]/40 rotate-45" />
-                    
-                    {/* Floating Fashion Image Card 1 */}
-                    <div 
-                      onClick={() => {
-                        setPromoHovered(false);
-                        onNavigate('shop', 'Women', 'Sarees');
-                      }}
-                      className="relative group cursor-pointer overflow-hidden rounded-xl bg-gray-100 shadow-md border border-gray-200 aspect-[3/4]"
-                    >
-                      <img 
-                        src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop" 
-                        alt="Royal Silk Saree Promo"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3">
-                        <span className="text-[10px] font-extrabold text-[#D4AF37] tracking-widest">ROYAL TISSUE</span>
-                        <span className="text-white text-xs font-serif font-bold">24K Zari Saree</span>
-                      </div>
-                    </div>
-
-                    {/* Floating Fashion Image Card 2 */}
-                    <div 
-                      onClick={() => {
-                        setPromoHovered(false);
-                        onNavigate('shop', 'Kids');
-                      }}
-                      className="relative group cursor-pointer overflow-hidden rounded-xl bg-gray-100 shadow-md border border-gray-200 aspect-[3/4]"
-                    >
-                      <img 
-                        src="https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?q=80&w=600&auto=format&fit=crop" 
-                        alt="Kids Royal Party Wear Promo"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3">
-                        <span className="text-[10px] font-extrabold text-[#D4AF37] tracking-widest">KIDS GALA</span>
-                        <span className="text-white text-xs font-serif font-bold">Gilded Ball Gowns</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
             {/* Utility / Action Icons */}
             <div className="flex items-center gap-4">
@@ -407,15 +339,6 @@ export const Header: React.FC<HeaderProps> = ({
                   )}
                 </div>
                 <span className="hidden sm:inline font-bold">BAG</span>
-              </button>
-
-              {/* Admin Dashboard Portal Link */}
-              <button
-                onClick={() => onNavigate('admin')}
-                className="p-2 text-gray-500 hover:text-amber-600 transition rounded-full hover:bg-amber-50 focus:outline-none flex items-center gap-1"
-                title="Admin Control Panel"
-              >
-                <ShieldCheck className="w-5 h-5" />
               </button>
 
             </div>
@@ -535,16 +458,6 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
 
                 <div className="pt-4 mt-2 border-t border-gray-200 flex items-center justify-around">
-                  <button 
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      onNavigate('admin');
-                    }}
-                    className="flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-[#111]"
-                  >
-                    <ShieldCheck className="w-4 h-4 text-amber-600" />
-                    <span>Admin Panel</span>
-                  </button>
                   <a 
                     href="https://maps.app.goo.gl/QwoTg7hgNXX9gPp96"
                     target="_blank"

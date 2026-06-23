@@ -44,7 +44,6 @@ export function App() {
     addToCart,
     setSession,
     setUser,
-    setIsAdminAuth,
     logoutUser,
     setProducts,
     setColorVariants,
@@ -97,10 +96,9 @@ export function App() {
             savedAddresses: [],
           });
 
-          // Check admin status
+          // Check admin status (for data loading)
           const isAdmin = await checkIsAdmin();
-          setIsAdminAuth(isAdmin);
-
+          
           // Load user-specific data
           await loadUserData(session.user.id, isAdmin);
         } else if (event === 'SIGNED_OUT') {
