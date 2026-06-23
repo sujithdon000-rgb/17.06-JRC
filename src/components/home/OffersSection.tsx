@@ -61,7 +61,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="max-w-[95rem] mx-auto relative z-10">
         
         {/* Upper Announcement Header */}
         <motion.div 
