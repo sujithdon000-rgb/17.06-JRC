@@ -7,7 +7,7 @@ import { supabase } from './lib/supabase';
 import { checkIsAdmin, getUserProfile } from './lib/auth';
 import { fetchProducts, fetchAllColorVariants } from './lib/products';
 import { fetchHomepageBanners, fetchCategoryBanners, fetchOfferConfig } from './lib/banners';
-import { fetchUserOrders, fetchUserNotifications, subscribeToUserNotifications } from './lib/orders';
+import { fetchUserOrders, fetchUserNotifications, subscribeToUserNotifications, fetchAllOrdersAdmin } from './lib/orders';
 
 // Modals
 import { Header } from './components/common/Header';
@@ -102,7 +102,7 @@ export function App() {
           setIsAdminAuth(isAdmin);
 
           // Load user-specific data
-          await loadUserData(session.user.id);
+          await loadUserData(session.user.id, isAdmin);
         } else if (event === 'SIGNED_OUT') {
           logoutUser();
         }
@@ -209,10 +209,10 @@ export function App() {
     }
   }
 
-  async function loadUserData(userId: string) {
+  async function loadUserData(userId: string, isAdmin = false) {
     try {
       const [orders, notifications] = await Promise.all([
-        fetchUserOrders(userId),
+        isAdmin ? fetchAllOrdersAdmin() : fetchUserOrders(userId),
         fetchUserNotifications(userId),
       ]);
 
