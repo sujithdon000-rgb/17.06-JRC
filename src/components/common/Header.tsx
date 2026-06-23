@@ -115,7 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
             <img 
               src="/logo.png" 
               alt="Jeev Ruthi Collection Logo" 
-              className="h-28 md:h-32 w-auto object-contain transition-transform duration-500 group-hover:scale-110 transform scale-150 origin-left"
+              className="h-28 md:h-32 w-auto object-contain transition-transform duration-500 group-hover:scale-110 transform scale-125 origin-left"
             />
           </div>
 
