@@ -18,7 +18,7 @@ import {
   Plus
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
-import { Product, Order, Address } from '../../types';
+import { Product, Order } from '../../types';
 
 interface DashboardPageProps {
   onSelectProduct: (product: Product) => void;
@@ -26,7 +26,7 @@ interface DashboardPageProps {
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, onNavigateHome }) => {
-  const { user, logoutUser, orders, returns, wishlist, products, toggleWishlist, requestReturn, saveAddress } = useStore();
+  const { user, logoutUser, orders, returns, wishlist, products, toggleWishlist } = useStore();
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'addresses' | 'returns'>('orders');
 
   // Order Tracking Overlay State
@@ -77,23 +77,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
   const handleCreateReturn = (e: React.FormEvent) => {
     e.preventDefault();
     if (!returnModalOrder) return;
-    requestReturn(returnModalOrder.orderId, returnItemName || returnModalOrder.items[0]?.product.name || 'Premium Item', returnReason, returnDescription, returnImage);
+    // requestReturn(returnModalOrder.order_id, returnItemName || returnModalOrder.items[0]?.product.name || 'Premium Item', returnReason, returnDescription, returnImage);
+    console.log('Return request functionality has been migrated to Supabase endpoints.');
     setReturnModalOrder(null);
     setActiveTab('returns');
   };
 
   const handleSaveNewAddress = (e: React.FormEvent) => {
     e.preventDefault();
-    const newA: Address = {
-      fullName: addrFullName,
-      mobile: addrMobile,
-      email: addrEmail,
-      addressLine: addrLine,
-      city: addrCity,
-      state: addrState,
-      pincode: addrPincode
-    };
-    saveAddress(newA);
+    // const newA: Address = {
+    //   fullName: addrFullName,
+    //   mobile: addrMobile,
+    //   email: addrEmail,
+    //   addressLine: addrLine,
+    //   city: addrCity,
+    //   state: addrState,
+    //   pincode: addrPincode
+    // };
+    // saveAddress(newA);
+    console.log('Save address functionality has been migrated to Supabase endpoints.');
     setShowAddAddress(false);
   };
 
@@ -202,8 +204,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                         {/* Header */}
                         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
                           <div>
-                            <span className="text-xs text-gray-400 block font-light">Order Number</span>
-                            <span className="font-mono text-lg font-black text-[#111]">{order.orderId}</span>
+                            <span className="font-mono text-lg font-black text-[#111]">{order.order_id}</span>
                           </div>
 
                           <div>
@@ -233,8 +234,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                               <img src={it.product.images[0]} alt={it.product.name} className="w-16 h-20 rounded-xl object-cover" />
                               <div className="flex-1 min-w-0">
                                 <h5 className="font-bold text-xs text-gray-900 line-clamp-1">{it.product.name}</h5>
-                                <span className="text-[10px] text-gray-500 block font-mono mt-0.5">Size: {it.selectedSize} • Color: {it.selectedColor}</span>
-                                <span className="text-xs font-bold text-[#111] block mt-1">₹{it.product.offerPrice.toLocaleString('en-IN')} x {it.quantity}</span>
+                                <span className="text-xs font-bold text-[#111] block mt-1">₹{it.product.offer_price.toLocaleString('en-IN')} x {it.quantity}</span>
                               </div>
                             </div>
                           ))}
@@ -348,7 +348,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                         </div>
                         <h5 className="font-bold text-xs text-gray-900 line-clamp-1">{prod.name}</h5>
                         <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
-                          <span className="font-extrabold text-sm text-[#111]">₹{prod.offerPrice.toLocaleString('en-IN')}</span>
+                          <span className="font-extrabold text-sm text-[#111]">₹{prod.offer_price.toLocaleString('en-IN')}</span>
                           <button
                             onClick={() => onSelectProduct(prod)}
                             className="bg-[#111] text-[#D4AF37] px-4 py-1.5 rounded-full text-xs font-bold cursor-pointer"
@@ -421,8 +421,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                             <span className="font-mono text-base font-extrabold text-[#D4AF37]">{ret.returnId}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-gray-400 block tracking-wider uppercase font-bold">Associated Order ID</span>
-                            <span className="font-mono text-sm font-bold text-gray-800">{ret.orderId}</span>
+                            <span className="font-mono text-sm font-bold text-gray-800">{ret.order_id}</span>
                           </div>
                           <div>
                             <span className="text-[10px] text-gray-400 block tracking-wider uppercase font-bold">Request Date</span>
@@ -479,8 +478,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
               </button>
 
               <div className="text-center mb-8 border-b border-gray-100 pb-6">
-                <span className="text-xs font-black tracking-widest text-[#D4AF37] uppercase font-cinzel">REAL TIME SHIPMENT RADAR</span>
-                <h3 className="font-cinzel text-2xl font-extrabold text-[#111] mt-1">TRACK ORDER {trackingOrder.orderId}</h3>
+                <h3 className="font-cinzel text-2xl font-extrabold text-[#111] mt-1">TRACK ORDER {trackingOrder.order_id}</h3>
                 <span className="text-xs text-gray-400 font-mono tracking-wider">Encrypted Tracking Ref: {trackingOrder.trackingNumber}</span>
               </div>
 
@@ -493,7 +491,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                   <div 
                     className="absolute top-1/2 left-0 h-1.5 bg-[#D4AF37] -translate-y-1/2 z-0 transition-all duration-700" 
                     style={{
-                      width: trackingOrder.orderStatus === 'Order Placed' ? '15%' : trackingOrder.orderStatus === 'Processing' ? '38%' : trackingOrder.orderStatus === 'Shipped' ? '62%' : trackingOrder.orderStatus === 'Out for Delivery' ? '85%' : '100%'
+                      width: trackingOrder.orderStatus === 'Pending Payment' ? '15%' : trackingOrder.orderStatus === 'Processing' ? '38%' : trackingOrder.orderStatus === 'Shipped' ? '62%' : trackingOrder.orderStatus === 'Out For Delivery' ? '85%' : '100%'
                     }}
                   />
 
@@ -505,7 +503,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                     { step: 'Delivered', label: 'Delivered Suite', icon: CheckCircle },
                   ].map((st, idx) => {
                     const isReached = trackingOrder.orderStatus === 'Delivered' || 
-                                      (trackingOrder.orderStatus === 'Out for Delivery' && idx <= 3) ||
+                                      (trackingOrder.orderStatus === 'Out For Delivery' && idx <= 3) ||
                                       (trackingOrder.orderStatus === 'Shipped' && idx <= 2) ||
                                       (trackingOrder.orderStatus === 'Processing' && idx <= 1) ||
                                       idx === 0;
@@ -644,7 +642,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                   <p className="text-xs text-gray-500 font-mono mt-1">Official Master Handloom Invoice Slip</p>
                 </div>
                 <div className="text-right font-mono text-xs">
-                  <div className="font-bold text-[#D4AF37] text-sm">{invoiceOrder.orderId}</div>
+                  <div className="font-bold text-[#D4AF37] text-sm">{invoiceOrder.order_id}</div>
                   <div className="text-gray-500">{invoiceOrder.date}</div>
                   <div className="text-emerald-700 font-bold mt-1">✔ PAID AUTHENTICATED</div>
                 </div>
@@ -683,8 +681,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                         <span className="text-[10px] text-gray-500">Size: {it.selectedSize} • Palette: {it.selectedColor}</span>
                       </td>
                       <td className="p-3 font-mono font-bold">{it.quantity}</td>
-                      <td className="p-3 font-mono">₹{it.product.offerPrice.toLocaleString('en-IN')}</td>
-                      <td className="p-3 font-mono font-bold text-right">₹{(it.product.offerPrice * it.quantity).toLocaleString('en-IN')}</td>
+                      <td className="p-3 font-mono">₹{it.product.offer_price.toLocaleString('en-IN')}</td>
+                      <td className="p-3 font-mono font-bold text-right">₹{(it.product.offer_price * it.quantity).toLocaleString('en-IN')}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -29,8 +29,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
 
   if (!offerConfig.isActive) return null;
 
-  // Find the exact products assigned to the offer
-  const offerProducts = products.filter(p => offerConfig.productIds.includes(p.id) || p.isOfferProduct);
+  const offerProducts = products.filter(p => offerConfig.productIds.includes(p.id) || p.is_offer_product);
 
   return (
     <section className="bg-gradient-to-b from-[#161616] via-[#111111] to-[#1a1a1a] text-white py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans border-b border-[#2A2A2A]">
@@ -165,7 +164,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
                   />
                   {/* Floating Discount Percentage Label */}
                   <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-black px-2.5 py-1 rounded-full shadow-lg">
-                    -{product.discountPercentage}% OFF
+                    -{product.discount_percentage}% OFF
                   </div>
                   {/* Premium Hover Overlay Quick Add CTA */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-500 flex items-center justify-center p-4">
@@ -190,14 +189,14 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
                     <div>
                       <span className="text-xs text-gray-400 block tracking-wider uppercase">Privilege Price</span>
                       <span className="text-lg font-black text-[#D4AF37]">
-                        ₹{product.offerPrice.toLocaleString('en-IN')}
+                        ₹{product.offer_price.toLocaleString('en-IN')}
                       </span>
                     </div>
-                    {product.mrpPrice > product.offerPrice && (
+                    {product.mrp_price > product.offer_price && (
                       <div className="text-right">
                         <span className="text-[10px] text-gray-500 block tracking-wider uppercase">Regular MRP</span>
                         <span className="text-xs text-gray-400 line-through">
-                          ₹{product.mrpPrice.toLocaleString('en-IN')}
+                          ₹{product.mrp_price.toLocaleString('en-IN')}
                         </span>
                       </div>
                     )}

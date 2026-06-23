@@ -46,7 +46,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onNavigateShop }) => {
           className="absolute inset-0"
         >
           <img
-            src={currentBanner.imageUrl}
+            src={currentBanner.image_url}
             alt={currentBanner.title}
             className="w-full h-full object-cover object-center"
           />
@@ -85,7 +85,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onNavigateShop }) => {
               onClick={() => onNavigateShop('Women')}
               className="bg-gradient-to-r from-[#D4AF37] to-[#AA771C] text-[#111111] hover:from-white hover:to-white hover:text-black transition duration-500 px-10 py-4 rounded-full font-sans font-extrabold text-xs tracking-widest uppercase shadow-2xl flex items-center gap-3 group cursor-pointer"
             >
-              <span>{currentBanner.ctaText}</span>
+              <span>{currentBanner.cta_text}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition" />
             </button>
 

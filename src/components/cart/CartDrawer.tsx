@@ -19,8 +19,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onNavig
   let finalTotal = 0;
 
   cart.forEach(item => {
-    const itemMrpTotal = item.product.mrpPrice * item.quantity;
-    const itemOfferTotal = item.product.offerPrice * item.quantity;
+    const itemMrpTotal = item.product.mrp_price * item.quantity;
+    const itemOfferTotal = item.product.offer_price * item.quantity;
     subtotal += itemMrpTotal;
     totalDiscount += (itemMrpTotal - itemOfferTotal);
     finalTotal += itemOfferTotal;
@@ -131,7 +131,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onNavig
 
                       <div className="text-right">
                         <span className="font-extrabold text-xs text-[#111]">
-                          ₹{(item.product.offerPrice * item.quantity).toLocaleString('en-IN')}
+                          ₹{(item.product.offer_price * item.quantity).toLocaleString('en-IN')}
                         </span>
                       </div>
                     </div>

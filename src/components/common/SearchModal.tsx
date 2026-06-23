@@ -31,7 +31,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSel
       const matchesCat = prod.category.toLowerCase().includes(q);
       const matchesSub = prod.subcategory.toLowerCase().includes(q);
       const matchesDesc = prod.description.toLowerCase().includes(q);
-      const matchesPrice = prod.offerPrice.toString().includes(q);
+      const matchesPrice = prod.offer_price.toString().includes(q);
 
       return matchesName || matchesSku || matchesCat || matchesSub || matchesDesc || matchesPrice;
     });
@@ -147,9 +147,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSel
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                         />
-                        {product.discountPercentage > 0 && (
+                        {product.discount_percentage > 0 && (
                           <span className="absolute top-1 left-1 bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
-                            -{product.discountPercentage}%
+                            -{product.discount_percentage}%
                           </span>
                         )}
                       </div>
@@ -163,11 +163,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSel
                         </h5>
                         <div className="flex items-center gap-2 mt-1.5">
                           <span className="font-extrabold text-xs text-[#111]">
-                            ₹{product.offerPrice.toLocaleString('en-IN')}
+                            ₹{product.offer_price.toLocaleString('en-IN')}
                           </span>
-                          {product.mrpPrice > product.offerPrice && (
+                          {product.mrp_price > product.offer_price && (
                             <span className="text-[11px] text-gray-400 line-through">
-                              ₹{product.mrpPrice.toLocaleString('en-IN')}
+                              ₹{product.mrp_price.toLocaleString('en-IN')}
                             </span>
                           )}
                         </div>

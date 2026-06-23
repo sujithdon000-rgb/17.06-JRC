@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import { useStore } from './store/useStore';
 import { Product, CategoryType, SubcategoryType } from './types';
 
+// Supabase auth & data
+import { supabase } from './lib/supabase';
+import { checkIsAdmin, getUserProfile } from './lib/auth';
+import { fetchProducts, fetchAllColorVariants } from './lib/products';
+import { fetchHomepageBanners, fetchCategoryBanners, fetchOfferConfig } from './lib/banners';
+import { fetchUserOrders, fetchUserNotifications, subscribeToUserNotifications } from './lib/orders';
+
 // Modals
 import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
@@ -33,30 +40,237 @@ import { PrivacyPolicyPage } from './components/pages/PrivacyPolicyPage';
 import { TermsConditionsPage } from './components/pages/TermsConditionsPage';
 
 export function App() {
-  const { addToCart } = useStore();
+  const {
+    addToCart,
+    setSession,
+    setUser,
+    setIsAdminAuth,
+    logoutUser,
+    setProducts,
+    setColorVariants,
+    setHomepageBanners,
+    setCategoryBanners,
+    setOfferConfig,
+    setOrders,
+    setCustomerNotifications,
+    addCustomerNotification,
+    user,
+  } = useStore();
 
   const [currentPage, setCurrentPage] = useState<string>('home');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | undefined>(undefined);
   const [selectedSubcategory, setSelectedSubcategory] = useState<SubcategoryType | undefined>(undefined);
-  
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
 
-  // Modals UI triggers
   const [cartDrawerOpen, setCartDrawerOpen] = useState<boolean>(false);
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
 
-  // Smooth scroll to top on page change
+  // ── Supabase Auth Listener & Bootstrap ──────────────────────────
+  useEffect(() => {
+    // Load public product catalog & banners immediately (no auth required)
+    loadPublicData();
+
+    // Listen to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+
+        if (session?.user) {
+          // Load user profile
+          const profile = await getUserProfile(session.user.id);
+          if (profile) {
+            setUser({
+              id: session.user.id,
+              name: profile.full_name || session.user.email?.split('@')[0] || 'Customer',
+              email: profile.email || session.user.email || '',
+              mobile: profile.mobile || session.user.phone || '',
+              isVerified: profile.is_verified ?? true,
+              authType: profile.auth_type || 'otp-mobile',
+              savedAddresses: [],
+            });
+          }
+
+          // Check admin status
+          const isAdmin = await checkIsAdmin();
+          setIsAdminAuth(isAdmin);
+
+          // Load user-specific data
+          await loadUserData(session.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          logoutUser();
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ── Load notification realtime subscription when user logs in ───
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = subscribeToUserNotifications(user.id, (payload) => {
+      if (payload.new) {
+        addCustomerNotification(payload.new as any);
+      }
+    });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  async function loadPublicData() {
+    try {
+      const [products, colorVariants, banners, catBanners, offerCfg] = await Promise.all([
+        fetchProducts(),
+        fetchAllColorVariants(),
+        fetchHomepageBanners(),
+        fetchCategoryBanners(),
+        fetchOfferConfig(),
+      ]);
+
+      // Map DB snake_case to our Product type
+      const mappedProducts = products.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        category: p.category,
+        subcategory: p.subcategory,
+        description: p.description,
+        mrp_price: p.mrp_price,
+        offer_price: p.offer_price,
+        discount_percentage: p.discount_percentage,
+        sizes: p.sizes ?? [],
+        stock: p.stock,
+        images: p.images ?? [],
+        colorVariants: colorVariants
+          .filter((cv: any) => cv.product_id === p.id)
+          .map((cv: any) => ({
+            id: cv.id,
+            product_id: cv.product_id,
+            name: cv.name,
+            code: cv.code,
+            images: cv.images ?? [],
+            display_order: cv.display_order,
+          })),
+        featured: p.featured,
+        best_seller: p.best_seller,
+        new_arrival: p.new_arrival,
+        is_offer_product: p.is_offer_product,
+        rating: p.rating,
+        review_count: p.review_count,
+        is_active: p.is_active,
+      }));
+
+      setProducts(mappedProducts);
+      setColorVariants(colorVariants);
+
+      setHomepageBanners(banners.map((b: any) => ({
+        id: b.id,
+        image_url: b.image_url,
+        title: b.title,
+        subtitle: b.subtitle,
+        cta_text: b.cta_text,
+        cta_link: b.cta_link,
+        display_order: b.display_order,
+        is_active: b.is_active,
+      })));
+
+      setCategoryBanners(catBanners.map((b: any) => ({
+        id: b.id,
+        category: b.category,
+        image_url: b.image_url,
+        title: b.title,
+        description: b.description,
+      })));
+
+      if (offerCfg) {
+        setOfferConfig({
+          id: offerCfg.id,
+          isActive: offerCfg.is_active,
+          bannerImage: offerCfg.banner_image,
+          title: offerCfg.title,
+          subtitle: offerCfg.subtitle,
+          expiryDate: offerCfg.expiry_date,
+          productIds: offerCfg.product_ids ?? [],
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load public data:', err);
+      // Falls back to INITIAL_PRODUCTS from store
+    }
+  }
+
+  async function loadUserData(userId: string) {
+    try {
+      const [orders, notifications] = await Promise.all([
+        fetchUserOrders(userId),
+        fetchUserNotifications(userId),
+      ]);
+
+      // Map orders from DB format
+      const mappedOrders = orders.map((o: any) => ({
+        id: o.id,
+        order_id: o.order_id,
+        user_id: o.user_id,
+        date: new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+        created_at: o.created_at,
+        customer: {
+          fullName: o.customer_full_name,
+          mobile: o.customer_mobile,
+          email: o.customer_email,
+          addressLine: o.customer_address_line,
+          city: o.customer_city,
+          state: o.customer_state,
+          pincode: o.customer_pincode,
+        },
+        items: (o.order_items ?? []).map((item: any) => ({
+          product: {
+            id: item.product_id,
+            name: item.product_name,
+            sku: item.product_sku,
+            images: item.product_image ? [item.product_image] : [],
+            mrp_price: item.mrp_price,
+            offer_price: item.offer_price,
+            colorVariants: [],
+          } as any,
+          selectedSize: item.selected_size,
+          selectedColor: item.selected_color,
+          selectedColorCode: item.selected_color_code || '#000',
+          quantity: item.quantity,
+        })),
+        totalAmount: o.total_amount,
+        subtotal: o.subtotal,
+        discount: o.discount,
+        shippingFee: o.shipping_fee,
+        paymentMethod: o.payment_method,
+        paymentStatus: o.payment_status,
+        paymentScreenshotUrl: o.payment_screenshot_url,
+        orderStatus: o.order_status,
+        trackingNumber: o.tracking_number,
+        courierName: o.courier_name,
+        orderNotes: o.order_notes,
+      }));
+
+      setOrders(mappedOrders);
+      setCustomerNotifications(notifications);
+    } catch (err) {
+      console.error('Failed to load user data:', err);
+    }
+  }
+
+  // ── Navigation ──────────────────────────────────────────────────
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage, selectedCategory, selectedSubcategory, activeProduct]);
 
-  // Master Navigation Bridge
   const handleNavigate = (page: string, category?: CategoryType, subcategory?: SubcategoryType) => {
     setSelectedCategory(category);
     setSelectedSubcategory(subcategory);
     setCurrentPage(page);
-    setActiveProduct(null); // reset product view
+    setActiveProduct(null);
   };
 
   const handleSelectProduct = (prod: Product) => {
@@ -64,26 +278,22 @@ export function App() {
     setCurrentPage('product-detail');
   };
 
-  const handleQuickAddToCart = (prod: Product, size: string, color: string, quantity = 1) => {
-    addToCart(prod, size, color, quantity);
+  const handleQuickAddToCart = (prod: Product, size: string, color: string, colorCode: string, quantity = 1) => {
+    addToCart(prod, size, color, colorCode, quantity);
     setCartDrawerOpen(true);
   };
 
-  const handleBuyNow = (prod: Product, size: string, color: string, quantity = 1) => {
-    addToCart(prod, size, color, quantity);
+  const handleBuyNow = (prod: Product, size: string, color: string, colorCode: string, quantity = 1) => {
+    addToCart(prod, size, color, colorCode, quantity);
     setCurrentPage('checkout');
   };
 
   return (
     <div className="bg-[#FCFCFC] text-[#111111] min-h-screen flex flex-col justify-between antialiased selection:bg-[#D4AF37] selection:text-white font-sans">
-      
-      {/* Search Engine Rich Snippet Ingestion */}
-      <SchemaMarkup />
 
-      {/* Real-time production webhook visual modal engine */}
+      <SchemaMarkup />
       <NotificationModal />
 
-      {/* Main Brand Logo-Only Header */}
       <Header
         currentPage={currentPage}
         onNavigate={handleNavigate}
@@ -92,33 +302,25 @@ export function App() {
         onOpenSearch={() => setSearchModalOpen(true)}
       />
 
-      {/* Live Workspace Pages Area */}
       <main className="flex-1">
-        
-        {/* HOMEPAGE VIEW (Mandatory Precise Section Order) */}
+
         {currentPage === 'home' && !activeProduct && (
           <div className="w-full">
-            {/* 1. OFFERS SECTION (FIRST) */}
             <OffersSection
               onSelectProduct={handleSelectProduct}
               onNavigateShop={(cat) => handleNavigate('shop', cat)}
             />
-
-            {/* 2. HERO BANNER */}
             <HeroBanner
               onNavigateShop={(cat) => handleNavigate('shop', cat)}
             />
-
-            {/* 3 to 10. NEW ARRIVALS, FEATURED COLLECTIONS, BEST SELLERS, WOMEN COLLECTIONS, KIDS COLLECTIONS, PREMIUM COLLECTIONS, CUSTOMER REVIEWS, STORE LOCATION */}
             <HomeShowcaseSections
               onSelectProduct={handleSelectProduct}
-              onNavigateShop={(cat, sub) => handleNavigate('shop', cat, sub)}
+              onNavigateShop={(cat, sub) => handleNavigate('shop', cat as CategoryType, sub as SubcategoryType)}
               onAddToCart={handleQuickAddToCart}
             />
           </div>
         )}
 
-        {/* REPERTOIRE CATALOG SHOP VIEW */}
         {currentPage === 'shop' && !activeProduct && (
           <ShopPage
             initialCategory={selectedCategory}
@@ -128,7 +330,6 @@ export function App() {
           />
         )}
 
-        {/* DETAILED PRODUCT PAGE VIEW */}
         {currentPage === 'product-detail' && activeProduct && (
           <ProductDetailPage
             product={activeProduct}
@@ -146,7 +347,6 @@ export function App() {
           />
         )}
 
-        {/* SECURE CHECKOUT FUNNEL VIEW */}
         {currentPage === 'checkout' && (
           <CheckoutPage
             onNavigateHome={() => handleNavigate('home')}
@@ -154,7 +354,6 @@ export function App() {
           />
         )}
 
-        {/* PRIVILEGED CUSTOMER VIP DASHBOARD */}
         {currentPage === 'dashboard' && (
           <DashboardPage
             onSelectProduct={handleSelectProduct}
@@ -162,12 +361,10 @@ export function App() {
           />
         )}
 
-        {/* ADMINISTRATIVE VAULT */}
         {currentPage === 'admin' && (
           <AdminPanel />
         )}
 
-        {/* B2B WHOLESALE EDI SANCTUARY */}
         {currentPage === 'wholesale-portal' && (
           <WholesalePortal
             onNavigateHome={() => handleNavigate('home')}
@@ -175,7 +372,6 @@ export function App() {
           />
         )}
 
-        {/* CONCIERGE POLICIES VIEW */}
         {currentPage === 'return-policy' && (
           <ReturnPolicyPage
             onBack={() => handleNavigate('home')}
@@ -184,44 +380,32 @@ export function App() {
         )}
 
         {currentPage === 'shipping-policy' && (
-          <ShippingPolicyPage
-            onBack={() => handleNavigate('home')}
-          />
+          <ShippingPolicyPage onBack={() => handleNavigate('home')} />
         )}
 
         {currentPage === 'privacy-policy' && (
-          <PrivacyPolicyPage
-            onBack={() => handleNavigate('home')}
-          />
+          <PrivacyPolicyPage onBack={() => handleNavigate('home')} />
         )}
 
         {currentPage === 'terms-conditions' && (
-          <TermsConditionsPage
-            onBack={() => handleNavigate('home')}
-          />
+          <TermsConditionsPage onBack={() => handleNavigate('home')} />
         )}
 
       </main>
 
-      {/* Main Brand Logo-Only Footer */}
-      <Footer
-        onNavigate={handleNavigate}
-      />
+      <Footer onNavigate={handleNavigate} />
 
-      {/* Slide-over Cart Drawer */}
       <CartDrawer
         isOpen={cartDrawerOpen}
         onClose={() => setCartDrawerOpen(false)}
         onNavigateCheckout={() => handleNavigate('checkout')}
       />
 
-      {/* Secure Concierge Auth Modal */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
       />
 
-      {/* Comprehensive Search Module Modal */}
       <SearchModal
         isOpen={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}

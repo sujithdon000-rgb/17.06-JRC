@@ -24,8 +24,8 @@ import { Product } from '../../types';
 interface ProductDetailPageProps {
   product: Product;
   onBack: () => void;
-  onAddToCart: (product: Product, size: string, color: string, quantity: number) => void;
-  onBuyNow: (product: Product, size: string, color: string, quantity: number) => void;
+  onAddToCart: (product: Product, size: string, color: string, colorCode: string, quantity: number) => void;
+  onBuyNow: (product: Product, size: string, color: string, colorCode: string, quantity: number) => void;
   onSelectSimilar: (prod: Product) => void;
 }
 
@@ -41,7 +41,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   // Mandatory Fixes State
   const [mainImage, setMainImage] = useState<string>(product.images[0] || '');
   const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'Free Size');
-  const [selectedColor, setSelectedColor] = useState<string>(product.colors[0] || 'Luxury Gold');
+  const [selectedColor, setSelectedColor] = useState<string>(product.colorVariants?.[0]?.name || 'Luxury Gold');
+  const [selectedColorCode, setSelectedColorCode] = useState<string>(product.colorVariants?.[0]?.code || '#D4AF37');
   const [quantity, setQuantity] = useState<number>(1);
 
   // Zoom & Lightbox State
@@ -53,7 +54,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   useEffect(() => {
     setMainImage(product.images[0] || '');
     setSelectedSize(product.sizes[0] || 'Free Size');
-    setSelectedColor(product.colors[0] || 'Luxury Gold');
+    setSelectedColor(product.colorVariants?.[0]?.name || 'Luxury Gold');
+    setSelectedColorCode(product.colorVariants?.[0]?.code || '#D4AF37');
     setQuantity(1);
     setZoomScale(1);
   }, [product]);
@@ -148,9 +150,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 </motion.div>
 
                 {/* Floating Discount Badge */}
-                {product.discountPercentage > 0 && (
+                {product.discount_percentage > 0 && (
                   <span className="absolute top-4 left-4 bg-red-600 text-white font-black text-xs px-3 py-1 rounded-full shadow-lg">
-                    -{product.discountPercentage}% PRIVILEGE
+                    -{product.discount_percentage}% PRIVILEGE
                   </span>
                 )}
 
@@ -232,7 +234,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   ))}
                 </div>
                 <span className="text-xs font-bold text-gray-700">
-                  {product.rating || '4.9'} ({product.reviewCount || 42} Connoisseur Reviews)
+                  {product.rating || '4.9'} ({product.review_count || 42} Connoisseur Reviews)
                 </span>
               </div>
             </div>
@@ -243,11 +245,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 <span className="text-[10px] uppercase font-bold text-gray-500 block tracking-wider">Showroom Privilege Value</span>
                 <div className="flex items-baseline gap-3 mt-0.5">
                   <span className="text-3xl font-black text-[#111]">
-                    ₹{product.offerPrice.toLocaleString('en-IN')}
+                    ₹{product.offer_price.toLocaleString('en-IN')}
                   </span>
-                  {product.mrpPrice > product.offerPrice && (
+                  {product.mrp_price > product.offer_price && (
                     <span className="text-sm text-gray-400 line-through">
-                      ₹{product.mrpPrice.toLocaleString('en-IN')}
+                      ₹{product.mrp_price.toLocaleString('en-IN')}
                     </span>
                   )}
                 </div>
@@ -297,12 +299,18 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </label>
 
               <div className="flex flex-wrap gap-3">
-                {product.colors.map((color) => (
+                {product.colorVariants?.map((variant) => (
                   <button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
+                    key={variant.id}
+                    onClick={() => {
+                      setSelectedColor(variant.name);
+                      setSelectedColorCode(variant.code);
+                      if (variant.images.length > 0) {
+                        handleThumbnailClick(variant.images[0]);
+                      }
+                    }}
                     className={`px-4 py-2.5 rounded-xl text-xs font-bold transition duration-300 border-2 flex items-center gap-2 cursor-pointer ${
-                      selectedColor === color
+                      selectedColor === variant.name
                         ? 'bg-[#111111] text-[#D4AF37] border-[#111111] shadow-md'
                         : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-black'
                     }`}
@@ -310,10 +318,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     <span 
                       className="w-3 h-3 rounded-full border border-gray-400 shadow-2xs inline-block"
                       style={{
-                        backgroundColor: color.toLowerCase().includes('gold') ? '#D4AF37' : color.toLowerCase().includes('red') || color.toLowerCase().includes('crimson') ? '#990000' : color.toLowerCase().includes('green') ? '#006633' : color.toLowerCase().includes('blue') ? '#003399' : color.toLowerCase().includes('champagne') ? '#F7E7CE' : '#111111'
+                        backgroundColor: variant.code
                       }}
                     />
-                    <span>{color}</span>
+                    <span>{variant.name}</span>
                   </button>
                 ))}
               </div>
@@ -352,7 +360,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               
               <div className="grid grid-cols-12 gap-3">
                 <button
-                  onClick={() => onAddToCart(product, selectedSize, selectedColor, quantity)}
+                  onClick={() => onAddToCart(product, selectedSize, selectedColor, selectedColorCode, quantity)}
                   className="col-span-10 bg-[#111111] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white transition duration-300 py-4 rounded-2xl font-cinzel font-bold text-xs tracking-widest uppercase shadow-lg flex items-center justify-center gap-2 group cursor-pointer"
                 >
                   <ShoppingBag className="w-4 h-4" />
@@ -371,7 +379,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </div>
 
               <button
-                onClick={() => onBuyNow(product, selectedSize, selectedColor, quantity)}
+                onClick={() => onBuyNow(product, selectedSize, selectedColor, selectedColorCode, quantity)}
                 className="w-full bg-gradient-to-r from-[#D4AF37] via-[#FCF6BA] to-[#AA771C] text-[#111] hover:opacity-95 transition duration-300 py-4 rounded-2xl font-cinzel font-black text-xs tracking-widest uppercase shadow-xl flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-[#111]" />
@@ -458,7 +466,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   </div>
                   <span className="text-[10px] font-bold text-[#D4AF37] block">{simProd.category} • {simProd.subcategory}</span>
                   <h5 className="font-bold text-xs text-gray-900 group-hover:text-[#D4AF37] transition line-clamp-1 mt-0.5">{simProd.name}</h5>
-                  <div className="font-extrabold text-sm text-[#111] mt-1">₹{simProd.offerPrice.toLocaleString('en-IN')}</div>
+                  <div className="font-extrabold text-sm text-[#111] mt-1">₹{simProd.offer_price.toLocaleString('en-IN')}</div>
                 </div>
               ))}
             </div>

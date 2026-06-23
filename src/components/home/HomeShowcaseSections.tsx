@@ -15,13 +15,13 @@ import {
   Award
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
-import { Product, CategoryType, SubcategoryType } from '../../types';
+import { Product } from '../../types';
 import { CUSTOMER_REVIEWS } from '../../data/initialData';
 
 interface HomeShowcaseSectionsProps {
   onSelectProduct: (product: Product) => void;
-  onNavigateShop: (category?: CategoryType, subcategory?: SubcategoryType) => void;
-  onAddToCart: (product: Product, size: string, color: string) => void;
+  onNavigateShop: (category: string, subcategory?: string) => void;
+  onAddToCart: (product: Product, size: string, color: string, colorCode: string, quantity?: number) => void;
 }
 
 export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
@@ -35,24 +35,25 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
   const [selectedColor, setSelectedColor] = useState('');
 
   // Section 3: NEW ARRIVALS
-  const newArrivalProducts = products.filter(p => p.newArrival);
+  const newArrivalProducts = products.filter(p => p.new_arrival);
 
   // Section 5: BEST SELLERS
-  const bestSellerProducts = products.filter(p => p.bestSeller);
+  const bestSellerProducts = products.filter(p => p.best_seller);
 
   // Section 8: PREMIUM COLLECTIONS
-  const premiumProducts = products.filter(p => p.mrpPrice >= 20000 || p.category === 'Wholesale');
+  const premiumProducts = products.filter(p => p.mrp_price >= 20000 || p.category === 'Wholesale');
 
   const openQuickAdd = (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedSize(product.sizes[0] || 'Free Size');
-    setSelectedColor(product.colors[0] || 'Luxury Gold');
+    setSelectedColor(product.colorVariants?.[0]?.name || 'Luxury Gold');
     setQuickAddModal(product);
   };
 
   const executeQuickAdd = () => {
     if (!quickAddModal) return;
-    onAddToCart(quickAddModal, selectedSize, selectedColor);
+    const colorCode = quickAddModal.colorVariants?.find(c => c.name === selectedColor)?.code || '#D4AF37';
+    onAddToCart(quickAddModal, selectedSize, selectedColor, colorCode, 1);
     setQuickAddModal(null);
   };
 
@@ -90,12 +91,12 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
 
           {/* Top Status Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
-            {product.discountPercentage > 0 && (
+            {product.discount_percentage > 0 && (
               <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded shadow">
-                -{product.discountPercentage}%
+                -{product.discount_percentage}%
               </span>
             )}
-            {product.newArrival && (
+            {product.new_arrival && (
               <span className="bg-[#111111] text-[#D4AF37] text-[10px] font-extrabold px-2 py-0.5 rounded shadow border border-[#D4AF37]/30">
                 NEW
               </span>
@@ -152,11 +153,11 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
           <div className="mt-4 pt-3 border-t border-gray-100 flex items-baseline justify-between">
             <div className="flex items-baseline gap-2">
               <span className="text-base font-extrabold text-[#111]">
-                ₹{product.offerPrice.toLocaleString('en-IN')}
+                ₹{product.offer_price.toLocaleString('en-IN')}
               </span>
-              {product.mrpPrice > product.offerPrice && (
+              {product.mrp_price > product.offer_price && (
                 <span className="text-xs text-gray-400 line-through">
-                  ₹{product.mrpPrice.toLocaleString('en-IN')}
+                  ₹{product.mrp_price.toLocaleString('en-IN')}
                 </span>
               )}
             </div>
@@ -492,14 +493,14 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
                     <div>
                       <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-light">Privilege Price</span>
                       <span className="text-2xl font-black text-[#D4AF37]">
-                        ₹{product.offerPrice.toLocaleString('en-IN')}
+                        ₹{product.offer_price.toLocaleString('en-IN')}
                       </span>
                     </div>
 
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onAddToCart(product, 'Custom Made', 'Imperial Gold');
+                        onAddToCart(product, 'Custom Made', 'Imperial Gold', '#D4AF37', 1);
                       }}
                       className="bg-[#D4AF37] text-[#111] hover:bg-white transition px-6 py-2.5 rounded-full font-bold text-xs tracking-wider shadow-lg"
                     >
@@ -698,7 +699,7 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
                 <div>
                   <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-widest">{quickAddModal.category}</span>
                   <h3 className="font-bold text-sm text-gray-900 mt-1">{quickAddModal.name}</h3>
-                  <div className="text-base font-extrabold text-[#111] mt-1">₹{quickAddModal.offerPrice.toLocaleString('en-IN')}</div>
+                  <div className="text-base font-extrabold text-[#111] mt-1">₹{quickAddModal.offer_price.toLocaleString('en-IN')}</div>
                 </div>
               </div>
 
@@ -721,17 +722,17 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Select Color</label>
+                  <label className="block text-[10px] font-black tracking-widest text-[#111] uppercase font-cinzel mb-2">Color Palette</label>
                   <div className="flex flex-wrap gap-2">
-                    {quickAddModal.colors.map(col => (
+                    {quickAddModal.colorVariants?.map((variant) => (
                       <button
-                        key={col}
-                        onClick={() => setSelectedColor(col)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition border cursor-pointer ${
-                          selectedColor === col ? 'bg-[#111] text-[#D4AF37] border-[#111]' : 'bg-gray-50 text-gray-800 border-gray-200 hover:border-black'
+                        key={variant.id}
+                        onClick={() => setSelectedColor(variant.name)}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition border cursor-pointer ${
+                          selectedColor === variant.name ? 'bg-[#111] text-[#D4AF37] border-[#111]' : 'bg-gray-50 text-gray-700 border-gray-200'
                         }`}
                       >
-                        {col}
+                        {variant.name}
                       </button>
                     ))}
                   </div>

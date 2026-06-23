@@ -17,7 +17,7 @@ interface ShopPageProps {
   initialCategory?: CategoryType;
   initialSubcategory?: SubcategoryType;
   onSelectProduct: (product: Product) => void;
-  onAddToCart: (product: Product, size: string, color: string) => void;
+  onAddToCart: (product: Product, size: string, color: string, colorCode: string, quantity?: number) => void;
 }
 
 export const ShopPage: React.FC<ShopPageProps> = ({
@@ -61,7 +61,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
     return b.category === 'Women'; // default
   }) || {
     category: selectedCat || 'Royal Archive',
-    imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1600&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1600&auto=format&fit=crop',
     title: selectedSub ? `${selectedSub.toUpperCase()} MASTERPIECES` : (selectedCat ? `${selectedCat.toUpperCase()} COUTURE` : 'THE ROYAL ARCHIVE'),
     description: 'Impeccable authentic craftsmanship curated for the most discerning connoisseurs of unparalleled luxury.'
   };
@@ -76,25 +76,25 @@ export const ShopPage: React.FC<ShopPageProps> = ({
     if (selectedCat && selectedCat !== 'Collections' && selectedCat !== 'Offers' && selectedCat !== 'Wholesale') {
       if (product.category.toLowerCase() !== selectedCat.toLowerCase()) return false;
     }
-    if (selectedCat === 'Offers' && !product.isOfferProduct && product.discountPercentage === 0) return false;
+    if (selectedCat === 'Offers' && !product.is_offer_product && product.discount_percentage === 0) return false;
     if (selectedCat === 'Wholesale' && product.category !== 'Wholesale') return false;
     
     // Subcategory filtering
     if (selectedSub && product.subcategory.toLowerCase() !== selectedSub.toLowerCase()) return false;
 
     // Sidebar Filters
-    if (product.offerPrice > filters.maxPrice) return false;
-    if (filters.onlyOffers && product.discountPercentage === 0) return false;
-    if (filters.onlyBestSellers && !product.bestSeller) return false;
-    if (filters.onlyNewArrivals && !product.newArrival) return false;
+    if (product.offer_price > filters.maxPrice) return false;
+    if (filters.onlyOffers && product.discount_percentage === 0) return false;
+    if (filters.onlyBestSellers && !product.best_seller) return false;
+    if (filters.onlyNewArrivals && !product.new_arrival) return false;
     if (filters.sizes.length > 0 && !product.sizes.some(sz => filters.sizes.includes(sz))) return false;
-    if (filters.colors.length > 0 && !product.colors.some(col => filters.colors.some(fc => col.toLowerCase().includes(fc.toLowerCase())))) return false;
+    if (filters.colors.length > 0 && !product.colorVariants?.some(variant => filters.colors.some(fc => variant.name.toLowerCase().includes(fc.toLowerCase())))) return false;
 
     return true;
   }).sort((a, b) => {
-    if (sortBy === 'price-low') return a.offerPrice - b.offerPrice;
-    if (sortBy === 'price-high') return b.offerPrice - a.offerPrice;
-    if (sortBy === 'discount') return b.discountPercentage - a.discountPercentage;
+    if (sortBy === 'price-low') return a.offer_price - b.offer_price;
+    if (sortBy === 'price-high') return b.offer_price - a.offer_price;
+    if (sortBy === 'discount') return b.discount_percentage - a.discount_percentage;
     return 0;
   });
 
@@ -149,7 +149,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
               className="absolute inset-0"
             >
               <img 
-                src={activeBanner.imageUrl} 
+                src={(activeBanner as any).image_url} 
                 alt={activeBanner.title}
                 className="w-full h-full object-cover object-center" 
               />
@@ -433,12 +433,12 @@ export const ShopPage: React.FC<ShopPageProps> = ({
 
                         {/* Top Badges */}
                         <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
-                          {product.discountPercentage > 0 && (
+                          {product.discount_percentage > 0 && (
                             <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded shadow">
-                              -{product.discountPercentage}%
+                              -{product.discount_percentage}%
                             </span>
                           )}
-                          {product.newArrival && (
+                          {product.new_arrival && (
                             <span className="bg-[#111111] text-[#D4AF37] text-[10px] font-extrabold px-2 py-0.5 rounded shadow border border-[#D4AF37]/30">
                               NEW
                             </span>
@@ -459,7 +459,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              onAddToCart(product, product.sizes[0] || 'Free Size', product.colors[0] || 'Luxury Gold');
+                              onAddToCart(product, product.sizes[0] || 'Free Size', product.colorVariants?.[0]?.name || 'Luxury Gold', product.colorVariants?.[0]?.code || '#D4AF37', 1);
                             }}
                             className="bg-[#D4AF37] text-[#111] hover:bg-white transition px-4 py-2 rounded-full font-bold text-xs flex items-center gap-1.5 shadow-lg cursor-pointer"
                           >
@@ -487,11 +487,11 @@ export const ShopPage: React.FC<ShopPageProps> = ({
                         <div className="mt-4 pt-3 border-t border-gray-100 flex items-baseline justify-between">
                           <div className="flex items-baseline gap-2">
                             <span className="text-base font-extrabold text-[#111]">
-                              ₹{product.offerPrice.toLocaleString('en-IN')}
+                              ₹{product.offer_price.toLocaleString('en-IN')}
                             </span>
-                            {product.mrpPrice > product.offerPrice && (
+                            {product.mrp_price > product.offer_price && (
                               <span className="text-xs text-gray-400 line-through">
-                                ₹{product.mrpPrice.toLocaleString('en-IN')}
+                                ₹{product.mrp_price.toLocaleString('en-IN')}
                               </span>
                             )}
                           </div>
