@@ -18,7 +18,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [authMethod, setAuthMethod] = useState<AuthMethod>('mobile');
   const [inputValue, setInputValue] = useState('');
   const [step, setStep] = useState<AuthStep>('input');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
@@ -29,11 +29,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     if (!isOpen) {
       setStep('input');
       setInputValue('');
-      setOtp(['', '', '', '', '', '']);
+      setOtp(Array(authMethod === 'mobile' ? 6 : 8).fill(''));
       setError(null);
       setResendTimer(0);
     }
-  }, [isOpen]);
+  }, [isOpen, authMethod]);
 
   useEffect(() => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
@@ -84,7 +84,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         setError(result.error);
       } else {
         setStep('otp');
-        setOtp(['', '', '', '', '', '']);
+        setOtp(Array(authMethod === 'mobile' ? 6 : 8).fill(''));
         startResendTimer();
         setTimeout(() => inputRefs.current[0]?.focus(), 300);
       }
@@ -100,8 +100,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     setError(null);
     const token = otp.join('');
-    if (token.length < 6) {
-      setError('Please enter the complete 6-digit OTP.');
+    const requiredLength = authMethod === 'mobile' ? 6 : 8;
+    if (token.length < requiredLength) {
+      setError(`Please enter the complete ${requiredLength}-digit OTP.`);
       return;
     }
 
@@ -147,7 +148,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     const newOtp = [...otp];
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
-    if (value && index < 5) {
+    if (value && index < otp.length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -232,7 +233,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     <button
                       key={method}
                       type="button"
-                      onClick={() => { setAuthMethod(method); setInputValue(''); setError(null); }}
+                      onClick={() => { setAuthMethod(method); setInputValue(''); setError(null); setOtp(Array(method === 'mobile' ? 6 : 8).fill('')); }}
                       className={`py-2.5 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition ${
                         authMethod === method
                           ? 'bg-[#111111] text-[#D4AF37] shadow-md'
@@ -356,8 +357,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <form onSubmit={handleVerifyOtp} className="space-y-5">
-                  {/* 6-digit OTP inputs */}
-                  <div className="flex justify-center gap-2">
+                  {/* OTP inputs */}
+                  <div className="flex justify-center gap-1.5 sm:gap-2">
                     {otp.map((digit, i) => (
                       <input
                         key={i}
@@ -369,7 +370,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                         onChange={(e) => handleOtpChange(i, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(i, e)}
                         onPaste={i === 0 ? handleOtpPaste : undefined}
-                        className="w-12 h-12 bg-gray-50 border-2 border-[#D4AF37]/50 rounded-2xl text-center text-xl font-bold font-mono focus:outline-none focus:border-[#D4AF37] focus:bg-white transition"
+                        className={`bg-gray-50 border-2 border-[#D4AF37]/50 rounded-xl text-center font-bold font-mono focus:outline-none focus:border-[#D4AF37] focus:bg-white transition ${otp.length === 8 ? 'w-8 h-10 text-lg sm:w-10 sm:h-12' : 'w-12 h-12 text-xl sm:rounded-2xl'}`}
                       />
                     ))}
                   </div>
