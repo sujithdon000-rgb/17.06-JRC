@@ -23,6 +23,7 @@ import {
 import { useStore } from '../../store/useStore';
 import { Product, CategoryBanner, CategoryType, SubcategoryType } from '../../types';
 import { createProduct, updateProduct } from '../../lib/products';
+import { upsertOfferConfig } from '../../lib/banners';
 import { supabase } from '../../lib/supabase';
 
 export const AdminPanel: React.FC = () => {
@@ -863,9 +864,23 @@ export const AdminPanel: React.FC = () => {
               <p className="text-xs text-gray-400 mt-1">"Must be first section on homepage. Admin can control: Offer Banner, Offer Text, Offer Products, Offer Expiry, Offer Status."</p>
             </div>
 
-            <form onSubmit={(e) => {
+            <form onSubmit={async (e) => {
               e.preventDefault();
-              alert('Homepage Offer Lookbook preferences active instantly.');
+              try {
+                await upsertOfferConfig({
+                  id: offerConfig.id,
+                  is_active: offerConfig.isActive,
+                  banner_image: offerConfig.bannerImages?.join(',') || '',
+                  title: offerConfig.title,
+                  subtitle: offerConfig.subtitle,
+                  expiry_date: offerConfig.expiryDate,
+                  product_ids: offerConfig.productIds
+                });
+                alert('Homepage Offer Lookbook preferences active instantly.');
+              } catch (err) {
+                console.error('Error saving offer config:', err);
+                alert('Failed to save offer config.');
+              }
             }} className="bg-[#1A1A1A] p-8 rounded-3xl border border-[#2A2A2A] space-y-6">
               
               <div className="flex items-center justify-between border-b border-[#2a2a2a] pb-4">
