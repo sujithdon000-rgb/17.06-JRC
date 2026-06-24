@@ -20,8 +20,6 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onNavigateShop }) => {
     return () => clearInterval(interval);
   }, [homepageBanners]);
 
-  if (homepageBanners.length === 0) return null;
-
   const currentBanner = homepageBanners[currentIndex] || homepageBanners[0];
 
   const handleNext = () => {
@@ -58,6 +56,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onNavigateShop }) => {
     x.set(0);
     y.set(0);
   };
+
+  if (homepageBanners.length === 0) return null;
 
   return (
     <section 

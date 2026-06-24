@@ -52,8 +52,6 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
     return () => clearInterval(slideInterval);
   }, [slideImages.length]);
 
-  if (!offerConfig.isActive) return null;
-
   const offerProducts = products.filter(p => offerConfig.productIds.includes(p.id) || p.is_offer_product);
 
   // 3D Tilt Setup for Offers Banner
@@ -81,6 +79,8 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
     x.set(0);
     y.set(0);
   };
+
+  if (!offerConfig.isActive) return null;
 
   return (
     <section className="bg-gradient-to-b from-[#161616] via-[#111111] to-[#1a1a1a] text-white pt-10 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans border-b border-[#2A2A2A]">
