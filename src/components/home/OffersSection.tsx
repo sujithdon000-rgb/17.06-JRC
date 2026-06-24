@@ -142,7 +142,7 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="relative rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-[#D4AF37]/30 mb-16 cursor-pointer group bg-[#111] perspective-1000 transform-gpu"
+            className="relative rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-[#D4AF37]/30 mb-16 cursor-pointer group bg-[#111] [perspective:1000px] transform-gpu"
             onClick={() => onNavigateShop('Offers')}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}

@@ -61,7 +61,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onNavigateShop }) => {
 
   return (
     <section 
-      className="relative w-full h-[85vh] min-h-[600px] bg-[#111111] overflow-hidden font-sans perspective-1000"
+      className="relative w-full h-[85vh] min-h-[600px] bg-[#111111] overflow-hidden font-sans [perspective:1000px]"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >

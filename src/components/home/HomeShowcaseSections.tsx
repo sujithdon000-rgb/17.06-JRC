@@ -68,7 +68,7 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
         whileInView={{ opacity: 1, y: 0 }}
         whileHover={{ 
           scale: 1.02, 
-          translateZ: 20, 
+          z: 20, 
           rotateX: 2, 
           rotateY: -2,
           boxShadow: "0 25px 50px -12px rgba(212, 175, 55, 0.25)"
@@ -77,7 +77,7 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
         transition={{ duration: 0.5 }}
         key={product.id}
         onClick={() => onSelectProduct(product)}
-        className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-[#D4AF37]/60 transition-colors duration-500 shadow-sm flex flex-col cursor-pointer perspective-1000 transform-gpu"
+        className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-[#D4AF37]/60 transition-colors duration-500 shadow-sm flex flex-col cursor-pointer [perspective:1000px] transform-gpu"
         style={{ transformStyle: "preserve-3d" }}
       >
         {/* Product Gallery Thumbnail Container */}
