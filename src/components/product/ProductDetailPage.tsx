@@ -77,9 +77,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     .slice(0, 4);
 
   const activeColorVariant = product.colorVariants?.find(cv => cv.name === selectedColor);
-  const activeImages = activeColorVariant && activeColorVariant.images.length > 0 
-    ? activeColorVariant.images 
-    : product.images;
 
   const isVideo = (url: string) => url.endsWith('.mp4') || url.endsWith('.webm');
   const isOutOfStock = product.stock <= 0;
@@ -126,7 +123,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               
               {/* IMPORTANT FIX: THUMBNAIL IMAGES (Left Column) */}
               <div className="order-2 md:order-1 md:col-span-2 flex flex-row md:flex-col gap-3 overflow-x-auto md:overflow-y-auto max-h-[600px] pb-2 md:pb-0 sm:pr-2">
-                {activeImages.map((img, idx) => (
+                {product.images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleThumbnailClick(img)}
