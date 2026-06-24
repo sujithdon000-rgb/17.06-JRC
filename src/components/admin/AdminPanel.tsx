@@ -23,7 +23,7 @@ import {
 import { useStore } from '../../store/useStore';
 import { Product, CategoryType, SubcategoryType } from '../../types';
 import { createProduct, updateProduct } from '../../lib/products';
-import { upsertOfferConfig, updateCategoryBanner } from '../../lib/banners';
+import { upsertOfferConfig, updateCategoryBanner, updateHomepageBanner } from '../../lib/banners';
 import { supabase } from '../../lib/supabase';
 
 export const AdminPanel: React.FC = () => {
@@ -33,6 +33,7 @@ export const AdminPanel: React.FC = () => {
     orders, 
     returns, 
     categoryBanners, 
+    homepageBanners,
     offerConfig,
     setOfferConfig,
     setProducts,
@@ -72,6 +73,13 @@ export const AdminPanel: React.FC = () => {
   const [bannerTitle, setBannerTitle] = useState('');
   const [bannerDesc, setBannerDesc] = useState('');
   const [bannerImg, setBannerImg] = useState('');
+
+  // Hero Banners CRUD state
+  const [selectedHeroId, setSelectedHeroId] = useState<string>('');
+  const [heroTitle, setHeroTitle] = useState('');
+  const [heroSubtitle, setHeroSubtitle] = useState('');
+  const [heroImg, setHeroImg] = useState('');
+  const [heroCta, setHeroCta] = useState('');
 
   // Bulk Upload simulated paste JSON state
   const [showBulkModal, setShowBulkModal] = useState(false);
@@ -317,6 +325,23 @@ export const AdminPanel: React.FC = () => {
       }
     } catch (err) {
       alert('Error parsing JSON structure. Please check syntax.');
+    }
+  };
+
+  const handleSaveHeroBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedHeroId) return;
+    try {
+      await updateHomepageBanner(selectedHeroId, {
+        image_url: heroImg,
+        title: heroTitle,
+        subtitle: heroSubtitle,
+        cta_text: heroCta
+      });
+      alert('Homepage Hero Banner updated successfully.');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save hero banner: ' + (err as Error).message);
     }
   };
 
@@ -628,15 +653,110 @@ export const AdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 4: LOOKBOOK BANNERS */}
+        {/* TAB 4: BANNERS & SLIDERS */}
         {adminTab === 'banners' && (
-          <div className="space-y-8 max-w-4xl mx-auto">
-            <div className="border-b border-[#2A2A2A] pb-6">
-              <h3 className="font-cinzel text-2xl font-bold text-white">CATEGORY DYNAMIC BANNER CRUD</h3>
-              <p className="text-xs text-gray-400 mt-1">Upload high-resolution lookbook photography and titles for automatic category transitions.</p>
+          <div className="space-y-12 max-w-4xl mx-auto">
+            
+            {/* HOMEPAGE HERO BANNERS */}
+            <div className="space-y-6">
+              <div className="border-b border-[#2A2A2A] pb-6">
+                <h3 className="font-cinzel text-2xl font-bold text-white">HOMEPAGE HERO SLIDERS CRUD</h3>
+                <p className="text-xs text-gray-400 mt-1">Manage the main immersive sliders at the top of the homepage.</p>
+              </div>
+  
+              <form onSubmit={handleSaveHeroBanner} className="bg-[#1A1A1A] p-8 rounded-3xl border border-[#2A2A2A] space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-2">Select Hero Slide to Edit *</label>
+                  <select
+                    value={selectedHeroId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setSelectedHeroId(id);
+                      const existing = homepageBanners.find(b => b.id === id);
+                      if (existing) {
+                        setHeroTitle(existing.title);
+                        setHeroSubtitle(existing.subtitle);
+                        setHeroImg(existing.image_url);
+                        setHeroCta(existing.cta_text);
+                      }
+                    }}
+                    className="w-full p-3.5 bg-[#111] border border-[#333] rounded-2xl text-xs font-bold text-white"
+                  >
+                    <option value="">-- Select Slide --</option>
+                    {homepageBanners.map((b, i) => (
+                      <option key={b.id} value={b.id}>Slide {i + 1}: {b.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedHeroId && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-300 uppercase mb-2">Main Headline *</label>
+                      <input
+                        type="text"
+                        required
+                        value={heroTitle}
+                        onChange={(e) => setHeroTitle(e.target.value)}
+                        className="w-full p-3.5 bg-[#111] border border-[#333] rounded-2xl text-xs font-bold text-white font-cinzel"
+                      />
+                    </div>
+      
+                    <div>
+                      <label className="block text-xs font-bold text-gray-300 uppercase mb-2">Subtitle / Description *</label>
+                      <textarea
+                        rows={2}
+                        required
+                        value={heroSubtitle}
+                        onChange={(e) => setHeroSubtitle(e.target.value)}
+                        className="w-full p-3.5 bg-[#111] border border-[#333] rounded-2xl text-xs text-white"
+                      />
+                    </div>
+      
+                    <div>
+                      <label className="block text-xs font-bold text-gray-300 uppercase mb-2">Button CTA Text *</label>
+                      <input
+                        type="text"
+                        required
+                        value={heroCta}
+                        onChange={(e) => setHeroCta(e.target.value)}
+                        className="w-full p-3.5 bg-[#111] border border-[#333] rounded-2xl text-xs font-bold text-white"
+                      />
+                    </div>
+      
+                    <div>
+                      <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-2">High-Res Image URL *</label>
+                      <input
+                        type="url"
+                        required
+                        value={heroImg}
+                        onChange={(e) => setHeroImg(e.target.value)}
+                        className="w-full p-3.5 bg-[#111] border border-[#333] rounded-2xl text-xs text-emerald-400 font-mono"
+                      />
+                    </div>
+      
+                    {heroImg && (
+                      <div className="w-full aspect-[21/9] rounded-xl overflow-hidden border border-[#333]">
+                        <img src={heroImg} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+      
+                    <button type="submit" className="w-full bg-[#D4AF37] text-black hover:bg-[#F3E5AB] transition py-4 rounded-xl font-bold tracking-widest uppercase text-xs">
+                      SAVE HERO SLIDE
+                    </button>
+                  </>
+                )}
+              </form>
             </div>
 
-            <form onSubmit={handleSaveBanner} className="bg-[#1A1A1A] p-8 rounded-3xl border border-[#2A2A2A] space-y-6">
+            {/* CATEGORY BANNERS */}
+            <div className="space-y-6 pt-6 border-t border-[#2A2A2A]">
+              <div className="border-b border-[#2A2A2A] pb-6">
+                <h3 className="font-cinzel text-2xl font-bold text-white">CATEGORY DYNAMIC BANNER CRUD</h3>
+                <p className="text-xs text-gray-400 mt-1">Upload high-resolution lookbook photography and titles for automatic category transitions.</p>
+              </div>
+
+              <form onSubmit={handleSaveBanner} className="bg-[#1A1A1A] p-8 rounded-3xl border border-[#2A2A2A] space-y-6">
               <div>
                 <label className="block text-xs font-bold text-[#D4AF37] uppercase mb-2">Select Target Repertoire Segment *</label>
                 <select
@@ -718,7 +838,8 @@ export const AdminPanel: React.FC = () => {
               </button>
             </form>
           </div>
-        )}
+        </div>
+      )}
 
         {/* TAB 5: ORDERS MANAGEMENT */}
         {adminTab === 'orders' && (
