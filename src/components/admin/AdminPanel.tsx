@@ -998,7 +998,7 @@ export const AdminPanel: React.FC = () => {
                 await upsertOfferConfig({
                   id: offerConfig.id,
                   is_active: offerConfig.isActive,
-                  banner_image: offerConfig.bannerImages?.join(',') || '',
+                  banner_image: offerConfig.bannerImages?.join('\n') || '',
                   title: offerConfig.title,
                   subtitle: offerConfig.subtitle,
                   expiry_date: offerConfig.expiryDate,

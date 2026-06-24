@@ -194,7 +194,7 @@ export function App() {
         setOfferConfig({
           id: offerCfg.id,
           isActive: offerCfg.is_active,
-          bannerImages: offerCfg.banner_image ? offerCfg.banner_image.split(',').map((s: string) => s.trim()).filter((s: string) => s) : [],
+          bannerImages: offerCfg.banner_image ? offerCfg.banner_image.split('\n').map((s: string) => s.trim()).filter((s: string) => s) : [],
           title: offerCfg.title,
           subtitle: offerCfg.subtitle,
           expiryDate: offerCfg.expiry_date,
