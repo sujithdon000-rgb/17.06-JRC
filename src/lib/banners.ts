@@ -139,9 +139,10 @@ export async function upsertOfferConfig(config: {
     if (error) throw error;
     return data;
   } else {
+    const { id, ...insertData } = config;
     const { data, error } = await supabase
       .from('offer_config')
-      .insert([config])
+      .insert([insertData])
       .select()
       .single();
 

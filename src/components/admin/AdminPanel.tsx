@@ -21,9 +21,9 @@ import {
   Lock
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
-import { Product, CategoryBanner, CategoryType, SubcategoryType } from '../../types';
+import { Product, CategoryType, SubcategoryType } from '../../types';
 import { createProduct, updateProduct } from '../../lib/products';
-import { upsertOfferConfig } from '../../lib/banners';
+import { upsertOfferConfig, updateCategoryBanner } from '../../lib/banners';
 import { supabase } from '../../lib/supabase';
 
 export const AdminPanel: React.FC = () => {
@@ -320,18 +320,25 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
-  const handleSaveBanner = (e: React.FormEvent) => {
+  const handleSaveBanner = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBannerCat || !bannerImg) return;
-    const newB: CategoryBanner = {
-      id: String(Date.now()),
-      category: selectedBannerCat as any,
-      image_url: bannerImg,
-      title: bannerTitle || `${selectedBannerCat.toUpperCase()} ROYAL ARCHIVE`,
-      description: bannerDesc || 'Impeccable genuine handloom weaves created for the elite.'
-    };
-    console.log(newB);
-    alert('Category Lookbook Banner active successfully.');
+    try {
+      const existing = categoryBanners.find(b => b.category.toLowerCase() === selectedBannerCat.toLowerCase());
+      if (existing) {
+        await updateCategoryBanner(existing.id, {
+          image_url: bannerImg,
+          title: bannerTitle || `${selectedBannerCat.toUpperCase()} ROYAL ARCHIVE`,
+          description: bannerDesc || 'Impeccable genuine handloom weaves created for the elite.'
+        });
+        alert('Category Lookbook Banner active successfully.');
+      } else {
+        alert('Category banner not found in database.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save category banner: ' + (err as Error).message);
+    }
   };
 
   return (
@@ -879,7 +886,7 @@ export const AdminPanel: React.FC = () => {
                 alert('Homepage Offer Lookbook preferences active instantly.');
               } catch (err) {
                 console.error('Error saving offer config:', err);
-                alert('Failed to save offer config.');
+                alert('Failed to save offer config: ' + (err as Error).message);
               }
             }} className="bg-[#1A1A1A] p-8 rounded-3xl border border-[#2A2A2A] space-y-6">
               
