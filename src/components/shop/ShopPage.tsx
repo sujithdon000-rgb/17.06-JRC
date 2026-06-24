@@ -412,12 +412,20 @@ export const ShopPage: React.FC<ShopPageProps> = ({
                       layout
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
+                      whileHover={{ 
+                        scale: 1.02, 
+                        translateZ: 20, 
+                        rotateX: 2, 
+                        rotateY: -2,
+                        boxShadow: "0 25px 50px -12px rgba(212, 175, 55, 0.25)"
+                      }}
                       transition={{ duration: 0.4 }}
                       key={product.id}
                       onClick={() => onSelectProduct(product)}
-                      className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-[#D4AF37]/60 transition-all duration-500 shadow-sm hover:shadow-xl flex flex-col cursor-pointer"
+                      className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-[#D4AF37]/60 transition-colors duration-500 shadow-sm flex flex-col cursor-pointer perspective-1000 transform-gpu"
+                      style={{ transformStyle: "preserve-3d" }}
                     >
-                      <div className="aspect-[3/4] w-full bg-[#f8f8f8] overflow-hidden relative">
+                      <div className="aspect-[3/4] w-full bg-[#f8f8f8] overflow-hidden relative" style={{ transform: "translateZ(10px)" }}>
                         <img 
                           src={product.images[0]} 
                           alt={product.name}

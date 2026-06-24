@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { Sparkles, Timer, ArrowRight, Tag } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Product } from '../../types';
@@ -55,6 +55,32 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
   if (!offerConfig.isActive) return null;
 
   const offerProducts = products.filter(p => offerConfig.productIds.includes(p.id) || p.is_offer_product);
+
+  // 3D Tilt Setup for Offers Banner
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseXSpring = useSpring(x, { stiffness: 300, damping: 30 });
+  const mouseYSpring = useSpring(y, { stiffness: 300, damping: 30 });
+
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["5deg", "-5deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-5deg", "5deg"]);
+  const scale = useTransform(mouseYSpring, [-0.5, 0.5], [1.02, 1.05]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    x.set(mouseX / width - 0.5);
+    y.set(mouseY / height - 0.5);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
 
   return (
     <section className="bg-gradient-to-b from-[#161616] via-[#111111] to-[#1a1a1a] text-white pt-10 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans border-b border-[#2A2A2A]">
@@ -116,10 +142,13 @@ export const OffersSection: React.FC<OffersSectionProps> = ({ onSelectProduct, o
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#D4AF37]/30 mb-16 cursor-pointer group bg-[#111]"
+            className="relative rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-[#D4AF37]/30 mb-16 cursor-pointer group bg-[#111] perspective-1000 transform-gpu"
             onClick={() => onNavigateShop('Offers')}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{ rotateX, rotateY, scale, transformStyle: "preserve-3d" }}
           >
-            <div className="grid w-full h-auto">
+            <div className="grid w-full h-auto" style={{ transform: "translateZ(30px)" }}>
               <AnimatePresence>
                 <motion.img 
                   key={currentSlide}

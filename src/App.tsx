@@ -9,13 +9,15 @@ import { fetchProducts, fetchAllColorVariants } from './lib/products';
 import { fetchHomepageBanners, fetchCategoryBanners, fetchOfferConfig } from './lib/banners';
 import { fetchUserOrders, fetchUserNotifications, subscribeToUserNotifications, fetchAllOrdersAdmin } from './lib/orders';
 
-// Modals
+// Modals & Common
 import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
 import { AuthModal } from './components/common/AuthModal';
 import { SearchModal } from './components/common/SearchModal';
 import { NotificationModal } from './components/common/NotificationModal';
 import { SchemaMarkup } from './components/common/SchemaMarkup';
+import { SplashScreen } from './components/common/SplashScreen';
+import { ParticleOverlay } from './components/common/ParticleOverlay';
 
 // Homepage Core
 import { OffersSection } from './components/home/OffersSection';
@@ -56,6 +58,7 @@ export function App() {
     user,
   } = useStore();
 
+  const [isAppLoading, setIsAppLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<string>('home');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | undefined>(undefined);
   const [selectedSubcategory, setSelectedSubcategory] = useState<SubcategoryType | undefined>(undefined);
@@ -204,6 +207,9 @@ export function App() {
     } catch (err) {
       console.error('Failed to load public data:', err);
       // Falls back to INITIAL_PRODUCTS from store
+    } finally {
+      // Enforce a minimum 2 second splash screen duration for the 3D effect
+      setTimeout(() => setIsAppLoading(false), 2000);
     }
   }
 
@@ -270,30 +276,33 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage, selectedCategory, selectedSubcategory, activeProduct]);
 
-  const handleNavigate = (page: string, category?: CategoryType, subcategory?: SubcategoryType) => {
+  const handleNavigate = (page: string, category?: any, subcategory?: any) => {
     setSelectedCategory(category);
     setSelectedSubcategory(subcategory);
     setCurrentPage(page);
     setActiveProduct(null);
   };
 
-  const handleSelectProduct = (prod: Product) => {
+  const handleSelectProduct = (prod: any) => {
     setActiveProduct(prod);
     setCurrentPage('product-detail');
   };
 
-  const handleQuickAddToCart = (prod: Product, size: string, color: string, colorCode: string, quantity = 1) => {
+  const handleQuickAddToCart = (prod: any, size: string, color: string, colorCode: string, quantity = 1) => {
     addToCart(prod, size, color, colorCode, quantity);
     setCartDrawerOpen(true);
   };
 
-  const handleBuyNow = (prod: Product, size: string, color: string, colorCode: string, quantity = 1) => {
+  const handleBuyNow = (prod: any, size: string, color: string, colorCode: string, quantity = 1) => {
     addToCart(prod, size, color, colorCode, quantity);
     setCurrentPage('checkout');
   };
 
   return (
-    <div className="bg-[#FCFCFC] text-[#111111] min-h-screen flex flex-col justify-between antialiased selection:bg-[#D4AF37] selection:text-white font-sans">
+    <>
+      <SplashScreen isLoading={isAppLoading} />
+      <ParticleOverlay />
+      <div className="bg-[#FCFCFC] text-[#111111] min-h-screen flex flex-col justify-between antialiased selection:bg-[#D4AF37] selection:text-white font-sans overflow-x-hidden relative">
 
       <SchemaMarkup />
       <NotificationModal />
@@ -319,7 +328,7 @@ export function App() {
             />
             <HomeShowcaseSections
               onSelectProduct={handleSelectProduct}
-              onNavigateShop={(cat, sub) => handleNavigate('shop', cat as CategoryType, sub as SubcategoryType)}
+              onNavigateShop={(cat, sub) => handleNavigate('shop', cat, sub)}
               onAddToCart={handleQuickAddToCart}
             />
           </div>
@@ -417,6 +426,7 @@ export function App() {
       />
 
     </div>
+    </>
   );
 }
 

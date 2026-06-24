@@ -66,14 +66,22 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
         layout
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
+        whileHover={{ 
+          scale: 1.02, 
+          translateZ: 20, 
+          rotateX: 2, 
+          rotateY: -2,
+          boxShadow: "0 25px 50px -12px rgba(212, 175, 55, 0.25)"
+        }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
         key={product.id}
         onClick={() => onSelectProduct(product)}
-        className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-[#D4AF37]/60 transition-all duration-500 shadow-sm hover:shadow-2xl flex flex-col cursor-pointer"
+        className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-[#D4AF37]/60 transition-colors duration-500 shadow-sm flex flex-col cursor-pointer perspective-1000 transform-gpu"
+        style={{ transformStyle: "preserve-3d" }}
       >
         {/* Product Gallery Thumbnail Container */}
-        <div className="aspect-[3/4] w-full bg-[#f8f8f8] overflow-hidden relative">
+        <div className="aspect-[3/4] w-full bg-[#f8f8f8] overflow-hidden relative" style={{ transform: "translateZ(10px)" }}>
           <img
             src={product.images[0]}
             alt={product.name}
@@ -201,7 +209,13 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
 
       {/* Section 4: FEATURED COLLECTIONS (Editorial Luxury Banner Grids) */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-[#111111] text-white font-sans">
-        <div className="max-w-7xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.8 }}
+          className="max-w-7xl mx-auto"
+        >
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-1.5 text-xs font-extrabold tracking-widest text-[#D4AF37] mb-2">
               <Crown className="w-4 h-4" />
@@ -303,38 +317,52 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
               </div>
             </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Section 5: BEST SELLERS */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto font-sans">
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 border-b border-gray-200 pb-4">
-          <div>
-            <div className="text-xs font-black tracking-widest text-[#D4AF37] uppercase mb-1 flex items-center gap-1.5">
-              <Award className="w-4 h-4 text-[#D4AF37]" />
-              <span>THE CONNOISSEUR FAVORITES</span>
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-[#FCFCFC] font-sans">
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.8 }}
+          className="max-w-7xl mx-auto"
+        >
+          <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-6 border-b border-gray-200 pb-4">
+            <div>
+              <div className="text-xs font-black tracking-widest text-[#D4AF37] uppercase mb-1 flex items-center gap-1.5">
+                <Award className="w-4 h-4 text-[#D4AF37]" />
+                <span>THE CONNOISSEUR FAVORITES</span>
+              </div>
+              <h2 className="font-cinzel text-3xl sm:text-4xl font-extrabold text-[#111111]">
+                BEST SELLERS
+              </h2>
             </div>
-            <h2 className="font-cinzel text-3xl sm:text-4xl font-extrabold text-[#111111]">
-              BEST SELLERS
-            </h2>
+            <button
+              onClick={() => onNavigateShop('Women')}
+              className="mt-4 md:mt-0 text-xs font-bold tracking-widest text-[#111] hover:text-[#D4AF37] transition flex items-center gap-1 group"
+            >
+              <span>VIEW ALL BEST SELLERS</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+            </button>
           </div>
-          <button
-            onClick={() => onNavigateShop('Women')}
-            className="mt-4 md:mt-0 text-xs font-bold tracking-widest text-[#111] hover:text-[#D4AF37] transition flex items-center gap-1 group"
-          >
-            <span>VIEW ALL BEST SELLERS</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-          </button>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {bestSellerProducts.slice(0, 4).map(renderProductCard)}
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {bestSellerProducts.slice(0, 4).map(renderProductCard)}
+          </div>
+        </motion.div>
       </section>
 
       {/* Section 6: WOMEN COLLECTIONS (Categories Showcase) */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-[#F8F8F8] font-sans border-t border-b border-gray-200">
-        <div className="max-w-7xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.8 }}
+          className="max-w-7xl mx-auto"
+        >
           <div className="text-center max-w-2xl mx-auto mb-14">
             <h2 className="font-cinzel text-3xl sm:text-4xl font-extrabold text-[#111]">
               WOMEN FASHION SEGMENTS
@@ -379,12 +407,18 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
               </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Section 7: KIDS COLLECTIONS (Categories Showcase) */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white font-sans">
-        <div className="max-w-7xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.8 }}
+          className="max-w-7xl mx-auto"
+        >
           <div className="text-center max-w-2xl mx-auto mb-14">
             <h2 className="font-cinzel text-3xl sm:text-4xl font-extrabold text-[#111]">
               KIDS ROYAL BOUTIQUE
@@ -429,13 +463,19 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
               </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Section 8: PREMIUM COLLECTIONS (Ultra High-End Showroom Segment) */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#1A1A1A] via-[#111111] to-[#222] text-white font-sans border-t border-b border-[#333]">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 border-b border-[#333] pb-4">
+      {/* Section 8: PREMIUM COLLECTIONS */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-[#111111] font-sans relative overflow-hidden border-t-4 border-[#D4AF37]">
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.8 }}
+          className="max-w-7xl mx-auto relative z-10"
+        >
+          <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-6 border-b border-[#333] pb-4">
             <div>
               <div className="text-xs font-black tracking-widest text-[#D4AF37] uppercase mb-1 flex items-center gap-1.5">
                 <Crown className="w-4 h-4 text-[#D4AF37]" />
@@ -511,7 +551,7 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
               </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Section 9: CUSTOMER REVIEWS */}
@@ -529,13 +569,15 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {CUSTOMER_REVIEWS.map((rev, idx) => (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: idx * 0.15 }}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+        >
+          {CUSTOMER_REVIEWS.map((rev) => (
+            <div
               key={rev.id}
               className="bg-white rounded-3xl p-8 shadow-xl border border-gray-200 flex flex-col justify-between relative group hover:border-[#D4AF37] transition duration-300"
             >
@@ -581,9 +623,9 @@ export const HomeShowcaseSections: React.FC<HomeShowcaseSectionsProps> = ({
                   <span className="text-[10px] text-gray-400 tracking-wider font-light">Verified Client • {rev.date}</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* Section 10: STORE LOCATION (Embed fully interactive real location) */}
