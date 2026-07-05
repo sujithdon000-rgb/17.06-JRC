@@ -40,7 +40,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   
   // Mandatory Fixes State
   const [mainImage, setMainImage] = useState<string>(product.images[0] || '');
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'Free Size');
+  const isTopsProduct = product.subcategory === 'Tops';
+  const [selectedSize, setSelectedSize] = useState<string>(isTopsProduct ? 'XL' : (product.sizes[0] || 'Free Size'));
   const [selectedColor, setSelectedColor] = useState<string>(product.colorVariants?.[0]?.name || 'Luxury Gold');
   const [selectedColorCode, setSelectedColorCode] = useState<string>(product.colorVariants?.[0]?.code || '#D4AF37');
   const [quantity, setQuantity] = useState<number>(1);
@@ -53,7 +54,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   // When props change, re-initialize selected states properly
   useEffect(() => {
     setMainImage(product.images[0] || '');
-    setSelectedSize(product.sizes[0] || 'Free Size');
+    const isTops = product.subcategory === 'Tops';
+    setSelectedSize(isTops ? 'XL' : (product.sizes[0] || 'Free Size'));
     setSelectedColor(product.colorVariants?.[0]?.name || 'Luxury Gold');
     setSelectedColorCode(product.colorVariants?.[0]?.code || '#D4AF37');
     setQuantity(1);
@@ -296,22 +298,28 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </div>
 
               <div className="flex flex-wrap gap-2.5">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    disabled={isOutOfStock}
-                    onClick={() => setSelectedSize(size)}
-                    className={`px-5 py-3 rounded-2xl text-xs font-bold tracking-wider transition duration-300 border-2 ${
-                      isOutOfStock 
-                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
-                        : selectedSize === size
-                          ? 'bg-[#111111] text-[#D4AF37] border-[#111111] shadow-lg scale-105 cursor-pointer'
-                          : 'bg-gray-50 text-gray-800 border-gray-200 hover:border-black cursor-pointer'
-                    }`}
-                  >
-                    {size} {isOutOfStock && '(Out of Stock)'}
-                  </button>
-                ))}
+                {product.sizes.map((size) => {
+                  const isSizeOutOfStock = isTopsProduct
+                    ? (size !== 'XL' || product.stock <= 0)
+                    : (product.stock <= 0);
+
+                  return (
+                    <button
+                      key={size}
+                      disabled={isSizeOutOfStock}
+                      onClick={() => setSelectedSize(size)}
+                      className={`px-5 py-3 rounded-2xl text-xs font-bold tracking-wider transition duration-300 border-2 ${
+                        isSizeOutOfStock 
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                          : selectedSize === size
+                            ? 'bg-[#111111] text-[#D4AF37] border-[#111111] shadow-lg scale-105 cursor-pointer'
+                            : 'bg-gray-50 text-gray-800 border-gray-200 hover:border-black cursor-pointer'
+                      }`}
+                    >
+                      {size} {isSizeOutOfStock && '(Out of Stock)'}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
