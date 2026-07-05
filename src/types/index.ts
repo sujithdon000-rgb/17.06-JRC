@@ -40,6 +40,7 @@ export interface Product {
   rating?: number;
   review_count?: number;
   is_active?: boolean;
+  shipping_fee?: number;
 }
 
 // ============================================================

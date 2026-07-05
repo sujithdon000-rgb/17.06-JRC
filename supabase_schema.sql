@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   rating NUMERIC(3,1) DEFAULT 5.0,
   review_count INT DEFAULT 0,
   is_active BOOLEAN DEFAULT TRUE,
+  shipping_fee NUMERIC DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

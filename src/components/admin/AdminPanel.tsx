@@ -145,6 +145,7 @@ export const AdminPanel: React.FC = () => {
   const [prodMrp, setProdMrp] = useState(24999);
   const [prodOffer, setProdOffer] = useState(18499);
   const [prodStock, setProdStock] = useState(12);
+  const [prodShippingFee, setProdShippingFee] = useState(0);
   const [prodImages, setProdImages] = useState<string[]>([]);
   const [prodVideo, setProdVideo] = useState('');
   const [prodColorVariants, setProdColorVariants] = useState<{name: string, code: string, image: string}[]>([]);
@@ -296,6 +297,7 @@ export const AdminPanel: React.FC = () => {
     setProdMrp(p.mrp_price);
     setProdOffer(p.offer_price);
     setProdStock(p.stock);
+    setProdShippingFee(p.shipping_fee || 0);
     const videoUrl = p.images.find(img => img.endsWith('.mp4') || img.endsWith('.webm')) || '';
     const imageUrls = p.images.filter(img => img !== videoUrl);
     setProdImages(imageUrls);
@@ -319,6 +321,7 @@ export const AdminPanel: React.FC = () => {
     setProdMrp(19999);
     setProdOffer(14999);
     setProdStock(10);
+    setProdShippingFee(0);
     setProdImages(['https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop']);
     setProdVideo('');
     setProdColorVariants([]);
@@ -350,7 +353,8 @@ export const AdminPanel: React.FC = () => {
       best_seller: prodBestSeller,
       new_arrival: prodNewArrival,
       is_offer_product: prodIsOffer,
-      is_active: true
+      is_active: true,
+      shipping_fee: Number(prodShippingFee)
     };
 
     try {
@@ -1335,7 +1339,7 @@ export const AdminPanel: React.FC = () => {
                   <textarea rows={3} required value={prodDescription} onChange={e => setProdDescription(e.target.value)} className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white" />
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <label className="block text-gray-300 uppercase mb-1.5 font-bold">Regular MRP (₹) *</label>
                     <input type="number" required value={prodMrp} onChange={e => setProdMrp(Number(e.target.value))} className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-[#D4AF37] font-mono font-bold" />
@@ -1345,7 +1349,11 @@ export const AdminPanel: React.FC = () => {
                     <input type="number" required value={prodOffer} onChange={e => setProdOffer(Number(e.target.value))} className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-emerald-400 font-mono font-bold" />
                   </div>
                   <div>
-                    <label className="block text-gray-300 uppercase mb-1.5 font-bold">Handloom Vault Stock *</label>
+                    <label className="block text-gray-300 uppercase mb-1.5 font-bold">Delivery Fee (₹) *</label>
+                    <input type="number" required value={prodShippingFee} onChange={e => setProdShippingFee(Number(e.target.value))} className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-amber-500 font-mono font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 uppercase mb-1.5 font-bold">Vault Stock *</label>
                     <input type="number" required value={prodStock} onChange={e => setProdStock(Number(e.target.value))} className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
                   </div>
                 </div>

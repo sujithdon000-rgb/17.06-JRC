@@ -79,7 +79,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     finalTotal += offerSum;
   });
 
-  const shippingFee = finalTotal > 0 ? (finalTotal > 15000 ? 0 : 499) : 0;
+  let shippingFee = 0;
+  cart.forEach(item => {
+    shippingFee += (item.product.shipping_fee || 0) * item.quantity;
+  });
   const amountPayable = finalTotal + shippingFee;
 
   // ── UPI QR Code ──────────────────────────────────────────────
