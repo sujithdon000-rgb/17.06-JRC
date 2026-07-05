@@ -39,9 +39,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const { wishlist, toggleWishlist, products } = useStore();
   
   // Mandatory Fixes State
+  // Mandatory Fixes State
   const [mainImage, setMainImage] = useState<string>(product.images[0] || '');
-  const isTopsProduct = product.subcategory === 'Tops';
-  const [selectedSize, setSelectedSize] = useState<string>(isTopsProduct ? 'XL' : (product.sizes[0] || 'Free Size'));
+  const getFirstAvailableSize = () => {
+    return (product.sizes || []).find(sz => 
+      product.size_stocks?.[sz] !== undefined ? product.size_stocks[sz] > 0 : product.stock > 0
+    ) || (product.sizes || [])[0] || 'Free Size';
+  };
+  const [selectedSize, setSelectedSize] = useState<string>(getFirstAvailableSize());
   const [selectedColor, setSelectedColor] = useState<string>(product.colorVariants?.[0]?.name || 'Luxury Gold');
   const [selectedColorCode, setSelectedColorCode] = useState<string>(product.colorVariants?.[0]?.code || '#D4AF37');
   const [quantity, setQuantity] = useState<number>(1);
@@ -54,13 +59,24 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   // When props change, re-initialize selected states properly
   useEffect(() => {
     setMainImage(product.images[0] || '');
-    const isTops = product.subcategory === 'Tops';
-    setSelectedSize(isTops ? 'XL' : (product.sizes[0] || 'Free Size'));
+    const firstSz = (product.sizes || []).find(sz => 
+      product.size_stocks?.[sz] !== undefined ? product.size_stocks[sz] > 0 : product.stock > 0
+    ) || (product.sizes || [])[0] || 'Free Size';
+    setSelectedSize(firstSz);
     setSelectedColor(product.colorVariants?.[0]?.name || 'Luxury Gold');
     setSelectedColorCode(product.colorVariants?.[0]?.code || '#D4AF37');
     setQuantity(1);
     setZoomScale(1);
   }, [product]);
+
+  // Adjust quantity if it exceeds selected size's stock
+  useEffect(() => {
+    if (selectedSizeStock > 0 && quantity > selectedSizeStock) {
+      setQuantity(selectedSizeStock);
+    } else if (selectedSizeStock <= 0) {
+      setQuantity(1);
+    }
+  }, [selectedSize, selectedSizeStock]);
 
   const isWishlisted = wishlist.includes(product.id);
 
@@ -81,7 +97,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const activeColorVariant = product.colorVariants?.find(cv => cv.name === selectedColor);
 
   const isVideo = (url: string) => url.endsWith('.mp4') || url.endsWith('.webm');
-  const isOutOfStock = product.stock <= 0;
+  const selectedSizeStock = product.size_stocks?.[selectedSize] !== undefined
+    ? product.size_stocks[selectedSize]
+    : (product.sizes.includes(selectedSize) ? product.stock : 0);
+  const isOutOfStock = selectedSizeStock <= 0;
 
   return (
     <div className="bg-[#FCFCFC] text-[#111111] min-h-screen font-sans pb-32">
@@ -298,10 +317,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </div>
 
               <div className="flex flex-wrap gap-2.5">
-                {product.sizes.map((size) => {
-                  const isSizeOutOfStock = isTopsProduct
-                    ? (size !== 'XL' || product.stock <= 0)
-                    : (product.stock <= 0);
+                {(product.sizes || []).map((size) => {
+                  const sizeStock = product.size_stocks?.[size] !== undefined
+                    ? product.size_stocks[size]
+                    : (product.sizes.includes(size) ? product.stock : 0);
+                  const isSizeOutOfStock = sizeStock <= 0;
 
                   return (
                     <button
@@ -374,14 +394,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   </button>
                   <span className="w-12 text-center font-mono font-bold text-base">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(prev => Math.min(product.stock || 10, prev + 1))}
+                    onClick={() => setQuantity(prev => Math.min(selectedSizeStock || 1, prev + 1))}
                     className="w-10 h-10 rounded-xl bg-white hover:bg-[#D4AF37] hover:text-[#111] flex items-center justify-center font-bold text-base transition shadow-2xs cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
                 <span className="text-xs text-gray-400 font-medium">
-                  {product.stock || 8} pieces reserved in handloom vault
+                  {selectedSizeStock} pieces reserved in handloom vault ({selectedSize})
                 </span>
               </div>
             </div>

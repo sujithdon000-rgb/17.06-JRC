@@ -41,6 +41,7 @@ export interface Product {
   review_count?: number;
   is_active?: boolean;
   shipping_fee?: number;
+  size_stocks?: Record<string, number>;
 }
 
 // ============================================================

@@ -146,6 +146,7 @@ export const AdminPanel: React.FC = () => {
   const [prodOffer, setProdOffer] = useState(18499);
   const [prodStock, setProdStock] = useState(12);
   const [prodShippingFee, setProdShippingFee] = useState(0);
+  const [prodSizeStocks, setProdSizeStocks] = useState<Record<string, number>>({});
   const [prodImages, setProdImages] = useState<string[]>([]);
   const [prodVideo, setProdVideo] = useState('');
   const [prodColorVariants, setProdColorVariants] = useState<{name: string, code: string, image: string}[]>([]);
@@ -298,6 +299,15 @@ export const AdminPanel: React.FC = () => {
     setProdOffer(p.offer_price);
     setProdStock(p.stock);
     setProdShippingFee(p.shipping_fee || 0);
+    const initialSizeStocks: Record<string, number> = {};
+    if (p.size_stocks && Object.keys(p.size_stocks).length > 0) {
+      setProdSizeStocks(p.size_stocks);
+    } else {
+      (p.sizes || []).forEach(sz => {
+        initialSizeStocks[sz] = p.stock || 0;
+      });
+      setProdSizeStocks(initialSizeStocks);
+    }
     const videoUrl = p.images.find(img => img.endsWith('.mp4') || img.endsWith('.webm')) || '';
     const imageUrls = p.images.filter(img => img !== videoUrl);
     setProdImages(imageUrls);
@@ -322,6 +332,7 @@ export const AdminPanel: React.FC = () => {
     setProdOffer(14999);
     setProdStock(10);
     setProdShippingFee(0);
+    setProdSizeStocks({ 'Free Size': 10 });
     setProdImages(['https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop']);
     setProdVideo('');
     setProdColorVariants([]);
@@ -337,6 +348,7 @@ export const AdminPanel: React.FC = () => {
     const imgs = rawImgs.map(s => s.trim()).filter(Boolean);
     const discount = prodMrp > prodOffer ? Math.round(((prodMrp - prodOffer) / prodMrp) * 100) : 0;
 
+    const totalStock = Object.values(prodSizeStocks).reduce((sum, val) => sum + val, 0);
     const payload = {
       name: prodName,
       sku: prodSku,
@@ -346,15 +358,16 @@ export const AdminPanel: React.FC = () => {
       mrp_price: Number(prodMrp),
       offer_price: Number(prodOffer),
       discount_percentage: discount,
-      sizes: ['Free Size', 'S', 'M', 'L', 'XL'],
-      stock: Number(prodStock),
+      sizes: Object.keys(prodSizeStocks),
+      stock: totalStock,
       images: imgs.length > 0 ? imgs : ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop'],
       featured: prodFeatured,
       best_seller: prodBestSeller,
       new_arrival: prodNewArrival,
       is_offer_product: prodIsOffer,
       is_active: true,
-      shipping_fee: Number(prodShippingFee)
+      shipping_fee: Number(prodShippingFee),
+      size_stocks: prodSizeStocks
     };
 
     try {
@@ -1353,8 +1366,55 @@ export const AdminPanel: React.FC = () => {
                     <input type="number" required value={prodShippingFee} onChange={e => setProdShippingFee(Number(e.target.value))} className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-amber-500 font-mono font-bold" />
                   </div>
                   <div>
-                    <label className="block text-gray-300 uppercase mb-1.5 font-bold">Vault Stock *</label>
-                    <input type="number" required value={prodStock} onChange={e => setProdStock(Number(e.target.value))} className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
+                    <label className="block text-gray-300 uppercase mb-1.5 font-bold">Total Stock (Auto)</label>
+                    <input type="number" disabled value={Object.values(prodSizeStocks).reduce((a, b) => a + b, 0)} className="w-full p-3 bg-[#222] border border-[#333] rounded-xl text-gray-400 font-mono font-bold cursor-not-allowed" />
+                  </div>
+                </div>
+
+                <div className="bg-[#181818] border border-white/5 rounded-2xl p-4 space-y-3">
+                  <label className="block text-gray-300 uppercase font-black tracking-wider font-cinzel text-xs">Size Availability & Stock Inventory</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    {['Free Size', 'S', 'M', 'L', 'XL'].map((sz) => {
+                      const isEnabled = prodSizeStocks[sz] !== undefined;
+                      const currentStock = prodSizeStocks[sz] || 0;
+                      return (
+                        <div key={sz} className={`bg-[#111] p-3.5 rounded-2xl border transition flex flex-col justify-between ${isEnabled ? 'border-[#D4AF37] bg-[#D4AF37]/5' : 'border-[#333]'}`}>
+                          <label className="flex items-center gap-2 cursor-pointer font-bold mb-2 select-none">
+                            <input
+                              type="checkbox"
+                              checked={isEnabled}
+                              onChange={(e) => {
+                                const newStocks = { ...prodSizeStocks };
+                                if (e.target.checked) {
+                                  newStocks[sz] = 10;
+                                } else {
+                                  delete newStocks[sz];
+                                }
+                                setProdSizeStocks(newStocks);
+                              }}
+                              className="w-4 h-4 text-[#D4AF37] accent-[#D4AF37] cursor-pointer"
+                            />
+                            <span className="text-white text-xs">{sz}</span>
+                          </label>
+                          {isEnabled && (
+                            <div className="space-y-1">
+                              <span className="text-[9px] text-gray-500 block uppercase font-bold">Stock Count</span>
+                              <input
+                                type="number"
+                                min={0}
+                                value={currentStock}
+                                onChange={(e) => {
+                                  const newStocks = { ...prodSizeStocks };
+                                  newStocks[sz] = Number(e.target.value);
+                                  setProdSizeStocks(newStocks);
+                                }}
+                                className="w-full p-2 bg-[#1A1A1A] border border-[#333] rounded-lg text-white text-xs font-mono font-bold focus:outline-none focus:border-[#D4AF37]"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 

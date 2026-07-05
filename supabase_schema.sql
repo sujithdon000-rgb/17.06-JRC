@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   review_count INT DEFAULT 0,
   is_active BOOLEAN DEFAULT TRUE,
   shipping_fee NUMERIC DEFAULT 0,
+  size_stocks JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
