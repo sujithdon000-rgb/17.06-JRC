@@ -26,7 +26,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onNavig
     finalTotal += itemOfferTotal;
   });
 
-  let shippingFee = 0;
+  let shippingFee = finalTotal > 0 ? 50 : 0;
   cart.forEach(item => {
     shippingFee += (item.product.shipping_fee || 0) * item.quantity;
   });
