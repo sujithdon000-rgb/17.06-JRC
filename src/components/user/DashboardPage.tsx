@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User as UserIcon, 
@@ -20,6 +20,8 @@ import {
 import { useStore } from '../../store/useStore';
 import { Product, Order } from '../../types';
 import { supabase } from '../../lib/supabase';
+import { createReturnRequest } from '../../lib/orders';
+import { uploadReturnEvidence } from '../../lib/storage';
 
 interface DashboardPageProps {
   onSelectProduct: (product: Product) => void;
@@ -27,7 +29,7 @@ interface DashboardPageProps {
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, onNavigateHome }) => {
-  const { user, logoutUser, orders, returns, wishlist, products, toggleWishlist } = useStore();
+  const { user, logoutUser, orders, returns, wishlist, products, toggleWishlist, setReturns } = useStore();
   const [activeTab, setActiveTab] = useState<'profile' | 'orders' | 'wishlist' | 'addresses' | 'returns'>('orders');
 
   // Order Tracking Overlay State
@@ -38,7 +40,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
   const [returnItemName, setReturnItemName] = useState<string>('');
   const [returnReason, setReturnReason] = useState<string>('Size/Fit Issue');
   const [returnDescription, setReturnDescription] = useState<string>('');
-  const [returnImage, setReturnImage] = useState<string>('https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=300&auto=format&fit=crop');
+  
+  // Return proof file upload states
+  const returnFileInputRef = useRef<HTMLInputElement>(null);
+  const [returnImageFile, setReturnImageFile] = useState<File | null>(null);
+  const [returnImagePreview, setReturnImagePreview] = useState<string | null>(null);
+  const [returnUploading, setReturnUploading] = useState<boolean>(false);
+  const [returnUploadError, setReturnUploadError] = useState<string | null>(null);
 
   // Invoice Download View State
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
@@ -75,13 +83,83 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
 
   const wishlistedProducts = products.filter(p => wishlist.includes(p.id));
 
-  const handleCreateReturn = (e: React.FormEvent) => {
+  const handleCreateReturn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!returnModalOrder) return;
-    // requestReturn(returnModalOrder.order_id, returnItemName || returnModalOrder.items[0]?.product.name || 'Premium Item', returnReason, returnDescription, returnImage);
-    console.log('Return request functionality has been migrated to Supabase endpoints.');
-    setReturnModalOrder(null);
-    setActiveTab('returns');
+    if (!returnModalOrder || !user) return;
+    if (!returnImageFile) {
+      setReturnUploadError('Please upload an evidence image.');
+      return;
+    }
+
+    setReturnUploading(true);
+    setReturnUploadError(null);
+
+    try {
+      const returnId = 'RET-' + Date.now().toString().slice(-6);
+
+      // 1. Upload to Supabase Storage
+      const { url: uploadUrl, error: uploadErr } = await uploadReturnEvidence(
+        user.id,
+        returnId,
+        returnImageFile
+      );
+
+      if (uploadErr || !uploadUrl) {
+        setReturnUploadError(`Upload failed: ${uploadErr}`);
+        setReturnUploading(false);
+        return;
+      }
+
+      // 2. Write to Supabase table
+      const returnPayload = {
+        return_id: returnId,
+        order_id: returnModalOrder.id,
+        order_display_id: returnModalOrder.order_id,
+        user_id: user.id,
+        customer_name: user.name,
+        customer_email: user.email,
+        customer_mobile: user.mobile,
+        product_name: returnItemName || returnModalOrder.items[0]?.product.name || 'Premium Item',
+        reason: returnReason,
+        description: returnDescription,
+        image_url: uploadUrl,
+      };
+
+      const dbResult = await createReturnRequest(returnPayload);
+
+      // 3. Update local Zustand state
+      const mappedNewReturn = {
+        id: dbResult.id,
+        returnId: returnId,
+        order_id: returnModalOrder.order_id,
+        productName: returnPayload.product_name,
+        customerName: returnPayload.customer_name,
+        customerEmail: returnPayload.customer_email,
+        customerMobile: returnPayload.customer_mobile,
+        reason: returnReason,
+        description: returnDescription,
+        imageUrl: uploadUrl,
+        requestDate: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+        status: 'Pending' as const,
+        adminNote: '',
+      };
+
+      setReturns([mappedNewReturn, ...returns]);
+
+      // Reset states
+      setReturnModalOrder(null);
+      setReturnImageFile(null);
+      setReturnImagePreview(null);
+      setReturnDescription('');
+      
+      alert('Return request submitted successfully! Our showroom staff will review it.');
+      setActiveTab('returns');
+    } catch (err: any) {
+      console.error('Failed to create return:', err);
+      setReturnUploadError(err.message || 'Failed to submit return request.');
+    } finally {
+      setReturnUploading(false);
+    }
   };
 
   const handleSaveNewAddress = (e: React.FormEvent) => {
@@ -456,7 +534,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                         {ret.imageUrl && (
                           <div className="pt-2">
                             <span className="text-[10px] text-gray-400 uppercase tracking-widest block font-bold mb-1">Evidence Image Uploaded:</span>
-                            <img src={ret.imageUrl} alt="Return proof" className="w-16 h-16 rounded-xl object-cover border border-gray-300 shadow-sm" />
+                            <img src={ret.imageUrl} alt="Return proof" className="w-16 h-16 rounded-xl object-cover border border-gray-300 shadow-sm cursor-pointer hover:opacity-80" onClick={() => window.open(ret.imageUrl, '_blank')} />
+                          </div>
+                        )}
+
+                        {ret.adminNote && (
+                          <div className={`p-3.5 rounded-xl border text-xs mt-3 ${
+                            ret.status === 'Rejected'
+                              ? 'bg-red-50 border-red-200 text-red-800'
+                              : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                          }`}>
+                            <strong>Showroom Feedback:</strong> {ret.adminNote}
                           </div>
                         )}
                       </div>
@@ -622,26 +710,72 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">Evidence Image Upload URL *</label>
-                  <div className="flex items-center gap-2">
-                    <Upload className="w-5 h-5 text-gray-400 shrink-0" />
-                    <input
-                      type="url"
-                      required
-                      placeholder="https://images.unsplash.com/..."
-                      value={returnImage}
-                      onChange={(e) => setReturnImage(e.target.value)}
-                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono"
-                    />
-                  </div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                    Upload Defective/Evidence Image *
+                  </label>
+
+                  {!returnImagePreview ? (
+                    <div
+                      onClick={() => returnFileInputRef.current?.click()}
+                      className="border-2 border-dashed border-red-200 rounded-2xl p-6 text-center cursor-pointer hover:border-red-400 hover:bg-red-50/10 transition"
+                    >
+                      <Upload className="w-8 h-8 text-red-300 mx-auto mb-2" />
+                      <p className="text-xs font-bold text-gray-700">Click to upload return proof image</p>
+                      <p className="text-[11px] text-gray-400 mt-1">JPG, PNG, WEBP — Max 5MB</p>
+                      <input
+                        ref={returnFileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+                            setReturnUploadError('Only JPG, PNG, or WEBP images are accepted.');
+                            return;
+                          }
+                          if (file.size > 5 * 1024 * 1024) {
+                            setReturnUploadError('Image must be under 5MB.');
+                            return;
+                          }
+                          setReturnUploadError(null);
+                          setReturnImageFile(file);
+                          setReturnImagePreview(URL.createObjectURL(file));
+                        }}
+                        className="hidden"
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative rounded-2xl overflow-hidden border-2 border-red-300 bg-red-50/10 p-2">
+                      <img src={returnImagePreview} alt="Return proof preview" className="w-full max-h-48 object-contain rounded-xl" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReturnImageFile(null);
+                          setReturnImagePreview(null);
+                          setReturnUploadError(null);
+                          if (returnFileInputRef.current) returnFileInputRef.current.value = '';
+                        }}
+                        className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition shadow"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+
+                  {returnUploadError && (
+                    <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" /> {returnUploadError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-gray-100 flex gap-3">
                   <button
                     type="submit"
-                    className="w-full bg-[#111111] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white transition duration-300 py-4 rounded-xl font-cinzel font-bold text-xs tracking-widest uppercase shadow-lg cursor-pointer"
+                    disabled={returnUploading}
+                    className="w-full bg-[#111111] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white transition duration-300 py-4 rounded-xl font-cinzel font-bold text-xs tracking-widest uppercase shadow-lg cursor-pointer disabled:opacity-50"
                   >
-                    SUBMIT RETURN REQUEST
+                    {returnUploading ? 'Uploading Evidence...' : 'SUBMIT RETURN REQUEST'}
                   </button>
                 </div>
               </form>

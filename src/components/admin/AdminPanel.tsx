@@ -27,7 +27,7 @@ import { Product, CategoryType, SubcategoryType } from '../../types';
 import { createProduct, updateProduct } from '../../lib/products';
 import { upsertOfferConfig, updateCategoryBanner, updateHomepageBanner } from '../../lib/banners';
 import { supabase } from '../../lib/supabase';
-import { adminApprovePayment, adminRejectPayment, adminUpdateOrderStatus } from '../../lib/orders';
+import { adminApprovePayment, adminRejectPayment, adminUpdateOrderStatus, adminUpdateReturnStatus } from '../../lib/orders';
 
 export const AdminPanel: React.FC = () => {
   const { 
@@ -48,6 +48,8 @@ export const AdminPanel: React.FC = () => {
   const [adminTab, setAdminTab] = useState<'dashboard' | 'products' | 'categories' | 'banners' | 'orders' | 'returns' | 'offers'>('dashboard');
 
   const [selectedAdminOrder, setSelectedAdminOrder] = useState<any>(null);
+  const [rejectingReturnId, setRejectingReturnId] = useState<string | null>(null);
+  const [rejectionNote, setRejectionNote] = useState<string>('');
 
   // Product CRUD Modals State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -967,41 +969,125 @@ export const AdminPanel: React.FC = () => {
                         </p>
                         <p className="text-xs text-gray-400 italic">"{ret.description}"</p>
                       </div>
-
                       {ret.imageUrl && (
                         <div className="pt-3">
                           <span className="text-[10px] text-gray-500 font-bold block uppercase mb-1">Evidence Photography:</span>
-                          <img src={ret.imageUrl} alt="Proof" className="w-24 h-24 rounded-2xl object-cover border border-[#444]" />
+                          <img src={ret.imageUrl} alt="Proof" className="w-24 h-24 rounded-2xl object-cover border border-[#444] hover:scale-105 transition duration-300 cursor-pointer" onClick={() => window.open(ret.imageUrl, '_blank')} />
+                        </div>
+                      )}
+
+                      {ret.adminNote && (
+                        <div className="pt-2 text-xs text-gray-400 font-mono border-t border-[#222]">
+                          <strong>Admin Feedback:</strong> {ret.adminNote}
                         </div>
                       )}
                     </div>
 
                     {/* Approvals action Triad */}
-                    <div className="pt-4 border-t border-[#2a2a2a] grid grid-cols-3 gap-2">
-                      <button
-                        onClick={() => console.log(ret.returnId, 'Approved')}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white transition py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        <span>APPROVE</span>
-                      </button>
+                    {rejectingReturnId === ret.returnId ? (
+                      <div className="pt-4 border-t border-[#2a2a2a] space-y-2">
+                        <label className="block text-[10px] font-bold text-red-400 uppercase">Enter Rejection Reason *</label>
+                        <textarea
+                          rows={2}
+                          value={rejectionNote}
+                          onChange={(e) => setRejectionNote(e.target.value)}
+                          placeholder="Evidence photo does not verify defect, we can't approve..."
+                          className="w-full p-2 bg-[#111] border border-[#333] rounded-xl text-xs text-white"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!rejectionNote.trim()) {
+                                alert('Please provide an explanation for rejection.');
+                                return;
+                              }
+                              try {
+                                await adminUpdateReturnStatus(ret.returnId, 'Rejected', rejectionNote);
+                                
+                                // Update local store
+                                useStore.setState({
+                                  returns: returns.map(r => r.returnId === ret.returnId ? { ...r, status: 'Rejected' as any, adminNote: rejectionNote } : r)
+                                });
+                                setRejectingReturnId(null);
+                                setRejectionNote('');
+                                alert('Return request rejected successfully.');
+                              } catch (e: any) {
+                                alert('Failed to reject return: ' + e.message);
+                              }
+                            }}
+                            className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-xl text-xs"
+                          >
+                            Submit Rejection
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRejectingReturnId(null);
+                              setRejectionNote('');
+                            }}
+                            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-xl text-xs"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="pt-4 border-t border-[#2a2a2a] flex flex-col gap-2">
+                        
+                        {/* Status update buttons */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={async () => {
+                              try {
+                                await adminUpdateReturnStatus(ret.returnId, 'Approved', 'Return Approved. Ready for pickup.');
+                                useStore.setState({
+                                  returns: returns.map(r => r.returnId === ret.returnId ? { ...r, status: 'Approved' as any, adminNote: 'Return Approved. Ready for pickup.' } : r)
+                                });
+                                alert('Return request approved successfully.');
+                              } catch (e: any) {
+                                alert('Failed to approve return: ' + e.message);
+                              }
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white transition py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span>APPROVE</span>
+                          </button>
 
-                      <button
-                        onClick={() => console.log(ret.returnId, 'Rejected')}
-                        className="bg-red-600 hover:bg-red-500 text-white transition py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <XCircle className="w-3.5 h-3.5" />
-                        <span>REJECT</span>
-                      </button>
+                          <button
+                            onClick={() => {
+                              setRejectingReturnId(ret.returnId);
+                              setRejectionNote("Evidence photo does not verify defect, we can't approve return request.");
+                            }}
+                            className="bg-red-600 hover:bg-red-500 text-white transition py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>REJECT</span>
+                          </button>
+                        </div>
 
-                      <button
-                        onClick={() => console.log(ret.returnId, 'Refunded')}
-                        className="bg-[#D4AF37] hover:bg-white text-[#111] transition py-2.5 rounded-xl text-xs font-extrabold uppercase cursor-pointer"
-                      >
-                        REFUND
-                      </button>
-                    </div>
+                        {/* Extra pickup button for Delivery Partner */}
+                        <button
+                          onClick={async () => {
+                            try {
+                              await adminUpdateReturnStatus(ret.returnId, 'Approved', 'Courier Pickup assigned to Delivery Partner.');
+                              useStore.setState({
+                                  returns: returns.map(r => r.returnId === ret.returnId ? { ...r, status: 'Approved' as any, adminNote: 'Courier Pickup assigned to Delivery Partner.' } : r)
+                                });
+                              alert('Delivery Partner assigned for pickup successfully!');
+                            } catch (e: any) {
+                              alert('Failed to assign pickup: ' + e.message);
+                            }
+                          }}
+                          className="w-full bg-[#D4AF37] hover:bg-white text-black transition py-2 rounded-xl text-xs font-black tracking-widest uppercase cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <Truck className="w-4 h-4" />
+                          <span>Assign Delivery Partner Pickup</span>
+                        </button>
 
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

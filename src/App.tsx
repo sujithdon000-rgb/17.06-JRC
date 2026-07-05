@@ -7,7 +7,7 @@ import { supabase } from './lib/supabase';
 import { checkIsAdmin, getUserProfile } from './lib/auth';
 import { fetchProducts, fetchAllColorVariants } from './lib/products';
 import { fetchHomepageBanners, fetchCategoryBanners, fetchOfferConfig } from './lib/banners';
-import { fetchUserOrders, fetchUserNotifications, subscribeToUserNotifications, fetchAllOrdersAdmin } from './lib/orders';
+import { fetchUserOrders, fetchUserNotifications, subscribeToUserNotifications, fetchAllOrdersAdmin, fetchUserReturns, fetchAllReturnsAdmin } from './lib/orders';
 
 // Modals & Common
 import { Header } from './components/common/Header';
@@ -55,6 +55,7 @@ export function App() {
     setOrders,
     setCustomerNotifications,
     addCustomerNotification,
+    setReturns,
     user,
   } = useStore();
 
@@ -215,9 +216,10 @@ export function App() {
 
   async function loadUserData(userId: string, isAdmin = false) {
     try {
-      const [orders, notifications] = await Promise.all([
+      const [orders, notifications, dbReturns] = await Promise.all([
         isAdmin ? fetchAllOrdersAdmin() : fetchUserOrders(userId),
         fetchUserNotifications(userId),
+        isAdmin ? fetchAllReturnsAdmin() : fetchUserReturns(userId),
       ]);
 
       // Map orders from DB format
@@ -264,8 +266,26 @@ export function App() {
         orderNotes: o.order_notes,
       }));
 
+      // Map returns from DB format to store format
+      const mappedReturns = dbReturns.map((r: any) => ({
+        id: r.id,
+        returnId: r.return_id,
+        order_id: r.order_display_id || r.order_id,
+        productName: r.product_name,
+        customerName: r.customer_name,
+        customerEmail: r.customer_email,
+        customerMobile: r.customer_mobile,
+        reason: r.reason,
+        description: r.description,
+        imageUrl: r.image_url,
+        requestDate: new Date(r.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+        status: r.status,
+        adminNote: r.admin_note,
+      }));
+
       setOrders(mappedOrders);
       setCustomerNotifications(notifications);
+      setReturns(mappedReturns);
     } catch (err) {
       console.error('Failed to load user data:', err);
     }

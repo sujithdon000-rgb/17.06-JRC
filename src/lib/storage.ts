@@ -108,3 +108,38 @@ export async function getPaymentScreenshotSignedUrl(
   if (error) return null;
   return data.signedUrl;
 }
+
+/**
+ * Upload return evidence screenshot to payment-screenshots bucket under returns/ folder
+ */
+export async function uploadReturnEvidence(
+  userId: string,
+  returnId: string,
+  file: File
+): Promise<{ url: string | null; error: string | null }> {
+  const ext = file.name.split('.').pop() ?? 'jpg';
+  const path = `returns/${userId}/${returnId}_${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('payment-screenshots')
+    .upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type,
+    });
+
+  if (uploadError) {
+    return { url: null, error: uploadError.message };
+  }
+
+  // Generate signed URL valid for 7 days
+  const { data, error: signError } = await supabase.storage
+    .from('payment-screenshots')
+    .createSignedUrl(path, 60 * 60 * 24 * 7);
+
+  if (signError) {
+    return { url: null, error: signError.message };
+  }
+
+  return { url: data.signedUrl, error: null };
+}
