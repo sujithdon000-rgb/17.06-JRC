@@ -18,13 +18,16 @@ import {
   XCircle, 
   TrendingUp,
   FileSpreadsheet,
-  Lock
+  Lock,
+  Clock,
+  Truck
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Product, CategoryType, SubcategoryType } from '../../types';
 import { createProduct, updateProduct } from '../../lib/products';
 import { upsertOfferConfig, updateCategoryBanner, updateHomepageBanner } from '../../lib/banners';
 import { supabase } from '../../lib/supabase';
+import { adminApprovePayment, adminRejectPayment, adminUpdateOrderStatus } from '../../lib/orders';
 
 export const AdminPanel: React.FC = () => {
   const { 
@@ -43,6 +46,8 @@ export const AdminPanel: React.FC = () => {
 
   // Admin tab state
   const [adminTab, setAdminTab] = useState<'dashboard' | 'products' | 'categories' | 'banners' | 'orders' | 'returns' | 'offers'>('dashboard');
+
+  const [selectedAdminOrder, setSelectedAdminOrder] = useState<any>(null);
 
   // Product CRUD Modals State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -865,6 +870,7 @@ export const AdminPanel: React.FC = () => {
                       <th className="p-4">Amount</th>
                       <th className="p-4">Payment Step</th>
                       <th className="p-4">Status Dispatch</th>
+                      <th className="p-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#2a2a2a]">
@@ -890,9 +896,28 @@ export const AdminPanel: React.FC = () => {
                           </span>
                         </td>
                         <td className="p-4">
-                          <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full font-bold">
-                            {o.orderStatus}
+                          <span className={`px-3 py-1 rounded-full font-bold inline-block ${
+                            o.orderStatus === 'Delivered' ? 'bg-emerald-500/20 text-emerald-300' :
+                            o.orderStatus === 'Payment Verification Pending' ? 'bg-yellow-500/20 text-yellow-300' :
+                            (o.orderStatus === 'Payment Approved' || o.orderStatus === 'Processing' || o.orderStatus === 'Packed') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                            'bg-blue-500/20 text-blue-300'
+                          }`}>
+                            {
+                              o.orderStatus === 'Payment Verification Pending' ? 'Pending Verification' :
+                              o.orderStatus === 'Payment Approved' ? 'Payment Verified' :
+                              o.orderStatus === 'Processing' ? 'Packaging' :
+                              o.orderStatus === 'Packed' ? 'Packaging' :
+                              o.orderStatus
+                            }
                           </span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => setSelectedAdminOrder(o)}
+                            className="bg-[#D4AF37] hover:bg-white text-black font-extrabold px-3 py-2 rounded-xl text-xs tracking-wider uppercase transition cursor-pointer"
+                          >
+                            Manage
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -1272,6 +1297,274 @@ export const AdminPanel: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Order Details & Management Modal */}
+      <AnimatePresence>
+        {selectedAdminOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md font-sans">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-2xl bg-[#1A1A1A] text-white rounded-3xl shadow-2xl p-8 sm:p-10 border-2 border-[#D4AF37] max-h-[90vh] overflow-y-auto space-y-6"
+            >
+              <div className="flex items-center justify-between border-b border-[#333] pb-4">
+                <div>
+                  <span className="text-[10px] font-black tracking-widest text-[#D4AF37] uppercase font-cinzel block">ORDER DETAILS</span>
+                  <h3 className="font-cinzel text-xl font-bold text-white">
+                    MANAGE ORDER: {selectedAdminOrder.order_id}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedAdminOrder(null)}
+                  className="p-1 hover:bg-[#333] rounded-full text-gray-400"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-gray-300 leading-relaxed font-sans">
+                {/* Customer Info */}
+                <div className="bg-[#111] p-5 rounded-2xl border border-[#333] space-y-2">
+                  <h4 className="font-cinzel text-sm font-bold text-[#D4AF37] uppercase tracking-wider">Client Info</h4>
+                  <p><strong>Name:</strong> {selectedAdminOrder.customer.fullName}</p>
+                  <p><strong>Mobile:</strong> {selectedAdminOrder.customer.mobile}</p>
+                  <p><strong>Email:</strong> {selectedAdminOrder.customer.email}</p>
+                  <p><strong>Address:</strong> {selectedAdminOrder.customer.addressLine}, {selectedAdminOrder.customer.city}, {selectedAdminOrder.customer.state} - {selectedAdminOrder.customer.pincode}</p>
+                  {selectedAdminOrder.orderNotes && (
+                    <p className="mt-2 text-yellow-300"><strong>Notes:</strong> "{selectedAdminOrder.orderNotes}"</p>
+                  )}
+                </div>
+
+                {/* Summary Info */}
+                <div className="bg-[#111] p-5 rounded-2xl border border-[#333] space-y-2">
+                  <h4 className="font-cinzel text-sm font-bold text-[#D4AF37] uppercase tracking-wider">Order Summary</h4>
+                  <p><strong>Date:</strong> {selectedAdminOrder.date}</p>
+                  <p><strong>Payment Method:</strong> {selectedAdminOrder.paymentMethod}</p>
+                  <p><strong>Payment Status:</strong> <span className="text-[#D4AF37] font-bold">{selectedAdminOrder.paymentStatus}</span></p>
+                  <p><strong>Order Status:</strong> <span className="text-[#D4AF37] font-bold">{selectedAdminOrder.orderStatus}</span></p>
+                  <div className="border-t border-[#222] pt-2 mt-2 font-bold text-sm text-white">
+                    Total Payable: ₹{selectedAdminOrder.totalAmount.toLocaleString('en-IN')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="bg-[#111] p-5 rounded-2xl border border-[#333]">
+                <h4 className="font-cinzel text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-3">Items Ordered</h4>
+                <div className="space-y-3 max-h-40 overflow-y-auto pr-1">
+                  {selectedAdminOrder.items.map((it: any, idx: number) => (
+                    <div key={idx} className="flex gap-3 items-center border-b border-[#222] pb-2 text-xs">
+                      {it.product.images?.[0] && (
+                        <img src={it.product.images[0]} alt={it.product.name} className="w-10 h-12 object-cover rounded border border-[#333] shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <strong className="text-white block truncate">{it.product.name}</strong>
+                        <span className="text-[10px] text-gray-500">Size: {it.selectedSize} • Color: {it.selectedColor}</span>
+                      </div>
+                      <span className="font-mono text-gray-400">Qty: {it.quantity}</span>
+                      <span className="font-mono text-[#D4AF37] font-bold">₹{it.product.offer_price?.toLocaleString('en-IN')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* UPI Payment Screenshot Verification */}
+              {selectedAdminOrder.paymentMethod === 'UPI' && (
+                <div className="bg-[#111] p-5 rounded-2xl border border-[#333] text-xs">
+                  <h4 className="font-cinzel text-xs font-bold text-[#D4AF37] uppercase tracking-wider mb-2">UPI Transaction Evidence</h4>
+                  {selectedAdminOrder.paymentScreenshotUrl ? (
+                    <div className="space-y-3">
+                      <p className="text-gray-400 text-[11px]">Review the receipt screenshot before updating status:</p>
+                      <div className="border border-[#333] rounded-xl overflow-hidden bg-black max-h-60 flex justify-center">
+                        <img src={selectedAdminOrder.paymentScreenshotUrl} alt="UPI Payment Screenshot" className="max-h-60 object-contain hover:scale-105 transition duration-300 cursor-zoom-in" onClick={() => window.open(selectedAdminOrder.paymentScreenshotUrl, '_blank')} />
+                      </div>
+                      <p className="text-[10px] text-gray-500 text-center italic">Click image to open in full screen</p>
+                    </div>
+                  ) : (
+                    <p className="text-red-400">⚠️ No payment screenshot uploaded by customer.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Action Panels */}
+              <div className="border-t border-[#333] pt-6 space-y-4">
+                
+                {/* 1. Payment Verification Actions */}
+                {selectedAdminOrder.paymentStatus === 'Pending Verification' && (
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase block tracking-wider">Step 1: Payment Verification</span>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await adminApprovePayment(selectedAdminOrder.id, selectedAdminOrder.user_id);
+                            await adminUpdateOrderStatus(selectedAdminOrder.id, 'Processing', 'Payment approved by Admin');
+                            
+                            // Notify customer in database
+                            const { notifyCustomerOnStatusChange } = await import('../../lib/orders');
+                            await notifyCustomerOnStatusChange(selectedAdminOrder.user_id, selectedAdminOrder.id, selectedAdminOrder.order_id, 'Payment Approved');
+                            
+                            useStore.getState().updateOrderInStore(selectedAdminOrder.order_id, {
+                              paymentStatus: 'Payment Approved',
+                              orderStatus: 'Processing'
+                            });
+                            setSelectedAdminOrder({
+                              ...selectedAdminOrder,
+                              paymentStatus: 'Payment Approved',
+                              orderStatus: 'Processing'
+                            });
+                            alert('Payment Verification Successful! Notification sent to customer.');
+                          } catch (e: any) {
+                            alert('Failed to approve payment: ' + e.message);
+                          }
+                        }}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold tracking-wider py-3.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Payment Received (Approve)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (confirm('Are you sure you want to reject this payment verification and cancel the order?')) {
+                            try {
+                              await adminRejectPayment(selectedAdminOrder.id, selectedAdminOrder.user_id);
+                              useStore.getState().updateOrderInStore(selectedAdminOrder.order_id, {
+                                paymentStatus: 'Payment Rejected',
+                                orderStatus: 'Cancelled'
+                              });
+                              setSelectedAdminOrder({
+                                ...selectedAdminOrder,
+                                paymentStatus: 'Payment Rejected',
+                                orderStatus: 'Cancelled'
+                              });
+                              alert('Payment verification rejected. Order status set to Cancelled.');
+                            } catch (e: any) {
+                              alert('Failed to reject payment: ' + e.message);
+                            }
+                          }
+                        }}
+                        className="bg-red-600 hover:bg-red-500 text-white font-bold tracking-wider py-3.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        <span>Payment Pending (Reject)</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Shipping Timeline Actions */}
+                {(selectedAdminOrder.paymentStatus === 'Payment Approved' || selectedAdminOrder.paymentStatus === 'Paid' || selectedAdminOrder.paymentMethod === 'COD') && selectedAdminOrder.orderStatus !== 'Cancelled' && (
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase block tracking-wider">Step 2: Shipping Progression Timeline</span>
+                    <div className="flex flex-wrap gap-3">
+                      
+                      <button
+                        type="button"
+                        disabled={selectedAdminOrder.orderStatus === 'Processing' || selectedAdminOrder.orderStatus === 'Packed'}
+                        onClick={async () => {
+                          try {
+                            await adminUpdateOrderStatus(selectedAdminOrder.id, 'Processing', 'Order status packaging updated by Admin');
+                            useStore.getState().updateOrderInStore(selectedAdminOrder.order_id, {
+                              orderStatus: 'Processing'
+                            });
+                            setSelectedAdminOrder({
+                              ...selectedAdminOrder,
+                              orderStatus: 'Processing'
+                            });
+                            alert('Order status updated to Packaging.');
+                          } catch (e: any) {
+                            alert('Error updating status: ' + e.message);
+                          }
+                        }}
+                        className={`px-5 py-3 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                          (selectedAdminOrder.orderStatus === 'Processing' || selectedAdminOrder.orderStatus === 'Packed')
+                            ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                            : 'bg-[#222] hover:bg-[#333] text-gray-300'
+                        }`}
+                      >
+                        <Clock className="w-4 h-4" />
+                        <span>1. Packaging</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={selectedAdminOrder.orderStatus === 'Shipped'}
+                        onClick={async () => {
+                          try {
+                            await adminUpdateOrderStatus(selectedAdminOrder.id, 'Shipped', 'Order shipped out by Admin');
+                            
+                            const { notifyCustomerOnStatusChange } = await import('../../lib/orders');
+                            await notifyCustomerOnStatusChange(selectedAdminOrder.user_id, selectedAdminOrder.id, selectedAdminOrder.order_id, 'Shipped');
+                            
+                            useStore.getState().updateOrderInStore(selectedAdminOrder.order_id, {
+                              orderStatus: 'Shipped'
+                            });
+                            setSelectedAdminOrder({
+                              ...selectedAdminOrder,
+                              orderStatus: 'Shipped'
+                            });
+                            alert('Order marked as Shipped! Customer notified.');
+                          } catch (e: any) {
+                            alert('Error updating status: ' + e.message);
+                          }
+                        }}
+                        className={`px-5 py-3 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                          selectedAdminOrder.orderStatus === 'Shipped'
+                            ? 'bg-blue-600/20 text-blue-300 border border-blue-600/30'
+                            : 'bg-[#222] hover:bg-[#333] text-gray-300'
+                        }`}
+                      >
+                        <Truck className="w-4 h-4" />
+                        <span>2. Shipped (Our Side Complete)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={selectedAdminOrder.orderStatus === 'Delivered'}
+                        onClick={async () => {
+                          try {
+                            await adminUpdateOrderStatus(selectedAdminOrder.id, 'Delivered', 'Order marked delivered (delivery partner update)');
+                            
+                            const { notifyCustomerOnStatusChange } = await import('../../lib/orders');
+                            await notifyCustomerOnStatusChange(selectedAdminOrder.user_id, selectedAdminOrder.id, selectedAdminOrder.order_id, 'Delivered');
+                            
+                            useStore.getState().updateOrderInStore(selectedAdminOrder.order_id, {
+                              orderStatus: 'Delivered',
+                              paymentStatus: 'Paid'
+                            });
+                            setSelectedAdminOrder({
+                              ...selectedAdminOrder,
+                              orderStatus: 'Delivered',
+                              paymentStatus: 'Paid'
+                            });
+                            alert('Order marked as Delivered (Delivery Partner Confirmed). Customer notified.');
+                          } catch (e: any) {
+                            alert('Error updating status: ' + e.message);
+                          }
+                        }}
+                        className={`px-5 py-3 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                          selectedAdminOrder.orderStatus === 'Delivered'
+                            ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-600/30'
+                            : 'bg-[#222] hover:bg-[#333] text-gray-300'
+                        }`}
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>3. Delivered (Delivery Partner Confirmed)</span>
+                      </button>
+
+                    </div>
+                  </div>
+                )}
+
+              </div>
             </motion.div>
           </div>
         )}

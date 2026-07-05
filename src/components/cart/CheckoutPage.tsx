@@ -277,7 +277,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
             {paymentMethod === 'UPI' ? (
               <>
-                <p className="text-yellow-300">⏳ <strong>Payment Verification Pending</strong> — Admin is reviewing your payment screenshot.</p>
+                <p className="text-yellow-300">⏳ <strong>Order Successful But Payment Verification Pending</strong> — Admin is reviewing your payment screenshot. Please check back in 1 hour.</p>
                 <p className="text-gray-400 text-[11px]">You will be notified once your payment is verified and the order is confirmed.</p>
               </>
             ) : (

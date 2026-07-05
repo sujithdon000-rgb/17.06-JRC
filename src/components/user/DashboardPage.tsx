@@ -222,9 +222,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                           <div>
                             <span className="text-xs text-gray-400 block font-light">Current Status</span>
                             <span className={`text-xs font-black px-3 py-1 rounded-full inline-block ${
-                              order.orderStatus === 'Delivered' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                              order.orderStatus === 'Delivered' ? 'bg-emerald-100 text-emerald-800' :
+                              order.orderStatus === 'Payment Verification Pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' :
+                              (order.orderStatus === 'Payment Approved' || order.orderStatus === 'Processing' || order.orderStatus === 'Packed') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                              'bg-amber-100 text-amber-800'
                             }`}>
-                              ● {order.orderStatus}
+                              ● {
+                                order.orderStatus === 'Payment Verification Pending' ? 'Payment Verification Pending (Check in 1hr)' : 
+                                order.orderStatus === 'Payment Approved' ? 'Payment Verification Successful' : 
+                                order.orderStatus === 'Processing' ? 'Packaging' : 
+                                order.orderStatus === 'Packed' ? 'Packaging' :
+                                order.orderStatus
+                              }
                             </span>
                           </div>
                         </div>
@@ -485,51 +494,65 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
               </div>
 
               {/* Graphical Step Pipeline */}
-              <div className="py-8 px-4">
-                <div className="flex items-center justify-between relative">
-                  
-                  {/* Connecting Line */}
-                  <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-gray-200 -translate-y-1/2 z-0" />
-                  <div 
-                    className="absolute top-1/2 left-0 h-1.5 bg-[#D4AF37] -translate-y-1/2 z-0 transition-all duration-700" 
-                    style={{
-                      width: trackingOrder.orderStatus === 'Pending Payment' ? '15%' : trackingOrder.orderStatus === 'Processing' ? '38%' : trackingOrder.orderStatus === 'Shipped' ? '62%' : trackingOrder.orderStatus === 'Out For Delivery' ? '85%' : '100%'
-                    }}
-                  />
-
-                  {[
-                    { step: 'Placed', label: 'Order Secured', icon: CheckCircle },
-                    { step: 'Processing', label: 'Artisan Finishing', icon: Clock },
-                    { step: 'Shipped', label: 'In Transit', icon: Truck },
-                    { step: 'Out for Delivery', label: 'Out For VIP Delivery', icon: AlertCircle },
-                    { step: 'Delivered', label: 'Delivered Suite', icon: CheckCircle },
-                  ].map((st, idx) => {
-                    const isReached = trackingOrder.orderStatus === 'Delivered' || 
-                                      (trackingOrder.orderStatus === 'Out For Delivery' && idx <= 3) ||
-                                      (trackingOrder.orderStatus === 'Shipped' && idx <= 2) ||
-                                      (trackingOrder.orderStatus === 'Processing' && idx <= 1) ||
-                                      idx === 0;
-
-                    return (
-                      <div key={st.step} className="relative z-10 flex flex-col items-center group">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shadow-md transition duration-500 ${
-                          isReached ? 'bg-[#111111] text-[#D4AF37] border-2 border-[#D4AF37] scale-110' : 'bg-white text-gray-400 border-2 border-gray-300'
-                        }`}>
-                          {idx + 1}
-                        </div>
-                        <span className={`text-[11px] font-extrabold tracking-wider mt-2 max-w-[80px] text-center ${isReached ? 'text-[#111]' : 'text-gray-400'}`}>
-                          {st.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-
+              {trackingOrder.orderStatus === 'Payment Verification Pending' ? (
+                <div className="text-center py-10 px-4 space-y-4">
+                  <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto text-yellow-600 border border-yellow-200 animate-pulse">
+                    <Clock className="w-8 h-8" />
+                  </div>
+                  <h4 className="font-cinzel font-bold text-lg text-yellow-700">Payment Verification Pending</h4>
+                  <p className="text-sm text-gray-500 max-w-md mx-auto">
+                    We are currently verifying your payment screenshot. Please check back in 1 hour. Once verified, tracking details will be shown here.
+                  </p>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="py-8 px-4">
+                    <div className="flex items-center justify-between relative">
+                      
+                      {/* Connecting Line */}
+                      <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-gray-200 -translate-y-1/2 z-0" />
+                      <div 
+                        className="absolute top-1/2 left-0 h-1.5 bg-[#D4AF37] -translate-y-1/2 z-0 transition-all duration-700" 
+                        style={{
+                          width: trackingOrder.orderStatus === 'Delivered' ? '100%' :
+                                 trackingOrder.orderStatus === 'Shipped' ? '66%' :
+                                 (trackingOrder.orderStatus === 'Processing' || trackingOrder.orderStatus === 'Packed' || trackingOrder.orderStatus === 'Payment Approved') ? '33%' : '0%'
+                        }}
+                      />
 
-              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 text-xs text-gray-700 space-y-2 leading-relaxed">
-                <p><strong>Concierge Delivery Note:</strong> Your precious handloom items are insulated within climate-controlled secure transport containers. Executive OTP verification required prior to parcel handover.</p>
-              </div>
+                      {[
+                        { step: 'Placed', label: 'Order Secured', icon: CheckCircle },
+                        { step: 'Processing', label: 'Packaging', icon: Clock },
+                        { step: 'Shipped', label: 'Our Side Shipping Complete', icon: Truck },
+                        { step: 'Delivered', label: 'Customer Received', icon: CheckCircle },
+                      ].map((st, idx) => {
+                        const isReached = trackingOrder.orderStatus === 'Delivered' || 
+                                          (trackingOrder.orderStatus === 'Shipped' && idx <= 2) ||
+                                          ((trackingOrder.orderStatus === 'Processing' || trackingOrder.orderStatus === 'Packed' || trackingOrder.orderStatus === 'Payment Approved') && idx <= 1) ||
+                                          idx === 0;
+
+                        return (
+                          <div key={st.step} className="relative z-10 flex flex-col items-center group">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shadow-md transition duration-500 ${
+                              isReached ? 'bg-[#111111] text-[#D4AF37] border-2 border-[#D4AF37] scale-110' : 'bg-white text-gray-400 border-2 border-gray-300'
+                            }`}>
+                              {idx + 1}
+                            </div>
+                            <span className={`text-[11px] font-extrabold tracking-wider mt-2 max-w-[80px] text-center ${isReached ? 'text-[#111]' : 'text-gray-400'}`}>
+                              {st.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 text-xs text-gray-700 space-y-2 leading-relaxed">
+                    <p><strong>Concierge Delivery Note:</strong> Your precious handloom items are packaging or in transit. {trackingOrder.orderStatus === 'Delivered' ? 'Package has been delivered successfully. Thank you!' : 'Delivery status is updated in real-time.'}</p>
+                  </div>
+                </>
+              )}
 
             </motion.div>
           </div>
