@@ -298,6 +298,7 @@ export const useStore = create<StoreState>()(
         cart: state.cart,
         wishlist: state.wishlist,
         filters: state.filters,
+        isAdminAuth: state.isAdminAuth,
         // Do NOT persist: session, user, orders, notifications
         // These are always fetched fresh from Supabase on mount
       }),
