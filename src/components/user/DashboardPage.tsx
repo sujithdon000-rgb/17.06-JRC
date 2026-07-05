@@ -523,7 +523,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                       {[
                         { step: 'Placed', label: 'Order Secured', icon: CheckCircle },
                         { step: 'Processing', label: 'Packaging', icon: Clock },
-                        { step: 'Shipped', label: 'Our Side Shipping Complete', icon: Truck },
+                        { step: 'Shipped', label: 'Shipped', icon: Truck },
                         { step: 'Delivered', label: 'Customer Received', icon: CheckCircle },
                       ].map((st, idx) => {
                         const isReached = trackingOrder.orderStatus === 'Delivered' || 
