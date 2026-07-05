@@ -59,6 +59,55 @@ const detectAverageColor = (imageUrl: string): Promise<string> => {
   });
 };
 
+const COLOR_NAMES_MAP = [
+  { name: 'Royal Crimson Red', r: 184, g: 15, b: 10 },
+  { name: 'Classic Scarlet Red', r: 255, g: 36, b: 0 },
+  { name: 'Deep Maroon', r: 128, g: 0, b: 0 },
+  { name: 'Pastel Blush Pink', r: 255, g: 192, b: 203 },
+  { name: 'Hot Magenta Pink', r: 255, g: 0, b: 144 },
+  { name: 'Midnight Violet Purple', r: 80, g: 42, b: 80 },
+  { name: 'Orchid Purple', r: 155, g: 89, b: 182 },
+  { name: 'Royal Indigo Blue', r: 75, g: 0, b: 130 },
+  { name: 'Midnight Navy Blue', r: 10, g: 25, b: 47 },
+  { name: 'Ocean Cobalt Blue', r: 0, g: 71, b: 171 },
+  { name: 'Sky Turquoise Blue', r: 64, g: 224, b: 208 },
+  { name: 'Emerald Jade Green', r: 9, g: 121, b: 81 },
+  { name: 'Mint Pastel Green', r: 152, g: 251, b: 152 },
+  { name: 'Olive Army Green', r: 128, g: 128, b: 0 },
+  { name: 'Royal Mustard Yellow', r: 225, g: 173, b: 1 },
+  { name: 'Sunset Amber Orange', r: 255, g: 140, b: 0 },
+  { name: 'Luxury Peach Cream', r: 252, g: 202, b: 159 },
+  { name: 'Gold Dust Metallic', r: 212, g: 175, b: 55 },
+  { name: 'Rich Copper Bronze', r: 205, g: 127, b: 50 },
+  { name: 'Sandy Beige', r: 245, g: 245, b: 220 },
+  { name: 'Ivory White', r: 255, g: 253, b: 240 },
+  { name: 'Carbon Jet Black', r: 17, g: 17, b: 17 },
+  { name: 'Slate Gray', r: 112, g: 128, b: 144 },
+  { name: 'Cocoa Brown', r: 92, g: 64, b: 51 }
+];
+
+const getClosestColorName = (hex: string): string => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+
+  let minDistance = Infinity;
+  let closestName = 'Premium Color';
+
+  for (const item of COLOR_NAMES_MAP) {
+    const distance = Math.sqrt(
+      Math.pow(r - item.r, 2) +
+      Math.pow(g - item.g, 2) +
+      Math.pow(b - item.b, 2)
+    );
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestName = item.name;
+    }
+  }
+  return closestName;
+};
+
 export const AdminPanel: React.FC = () => {
   const { 
     isAdminAuth, 
@@ -1472,10 +1521,14 @@ export const AdminPanel: React.FC = () => {
                               const newCvs = [...prodColorVariants]; 
                               newCvs[idx].image = e.target.value;
                               
-                              // Trigger auto-color extraction from URL if pasted
+                              // Trigger auto-color and auto-name extraction from URL if pasted
                               if (e.target.value && e.target.value.startsWith('http')) {
                                 const detectedHex = await detectAverageColor(e.target.value);
                                 newCvs[idx].code = detectedHex;
+                                const detectedName = getClosestColorName(detectedHex);
+                                if (!newCvs[idx].name || newCvs[idx].name === '') {
+                                  newCvs[idx].name = detectedName;
+                                }
                               }
                               setProdColorVariants(newCvs);
                             }} placeholder="Paste Image URL" className="flex-1 p-2 bg-[#1A1A1A] border border-[#333] rounded text-white text-xs" />
@@ -1490,6 +1543,7 @@ export const AdminPanel: React.FC = () => {
                                   const localUrl = URL.createObjectURL(file);
                                   const detectedHex = await detectAverageColor(localUrl);
                                   URL.revokeObjectURL(localUrl);
+                                  const detectedName = getClosestColorName(detectedHex);
 
                                   // 2. Upload to storage
                                   const { url, error } = await uploadProductImage(tempProductId, file);
@@ -1502,6 +1556,9 @@ export const AdminPanel: React.FC = () => {
                                   const newCvs = [...prodColorVariants];
                                   newCvs[idx].image = url;
                                   newCvs[idx].code = detectedHex;
+                                  if (!newCvs[idx].name || newCvs[idx].name === '') {
+                                    newCvs[idx].name = detectedName;
+                                  }
                                   setProdColorVariants(newCvs);
                                 } catch (err: any) {
                                   alert('Variant upload error: ' + err.message);
