@@ -1324,7 +1324,19 @@ export const AdminPanel: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-gray-300 uppercase mb-1.5 font-bold">Category Scope *</label>
-                    <select value={prodCategory} onChange={e => setProdCategory(e.target.value as any)} className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-bold">
+                    <select
+                      value={prodCategory}
+                      onChange={(e) => {
+                        const newCat = e.target.value as CategoryType;
+                        setProdCategory(newCat);
+                        if (newCat === 'Kids') {
+                          setProdSizeStocks({ '1 Year': 10 });
+                        } else {
+                          setProdSizeStocks({ 'Free Size': 10 });
+                        }
+                      }}
+                      className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-bold"
+                    >
                       <option value="Women">Women</option>
                       <option value="Kids">Kids</option>
                       <option value="Wholesale">Wholesale</option>
@@ -1374,7 +1386,10 @@ export const AdminPanel: React.FC = () => {
                 <div className="bg-[#181818] border border-white/5 rounded-2xl p-4 space-y-3">
                   <label className="block text-gray-300 uppercase font-black tracking-wider font-cinzel text-xs">Size Availability & Stock Inventory</label>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                    {['Free Size', 'S', 'M', 'L', 'XL'].map((sz) => {
+                    {(prodCategory === 'Kids'
+                      ? ['6-12 Months', '1 Year', '2 Year', '3 Year', '4 Year', '5 Year', '6 Year', '7 Year', '8 Year']
+                      : ['Free Size', 'S', 'M', 'L', 'XL']
+                    ).map((sz) => {
                       const isEnabled = prodSizeStocks[sz] !== undefined;
                       const currentStock = prodSizeStocks[sz] || 0;
                       return (
