@@ -28,6 +28,36 @@ import { createProduct, updateProduct } from '../../lib/products';
 import { upsertOfferConfig, updateCategoryBanner, updateHomepageBanner } from '../../lib/banners';
 import { supabase } from '../../lib/supabase';
 import { adminApprovePayment, adminRejectPayment, adminUpdateOrderStatus, adminUpdateReturnStatus } from '../../lib/orders';
+import { uploadProductImage, uploadProductVideo } from '../../lib/storage';
+
+const detectAverageColor = (imageUrl: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, 1, 1);
+          const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+          const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+          resolve(hex);
+          return;
+        }
+      } catch (err) {
+        console.error('Canvas color detection failed:', err);
+      }
+      resolve('#111111');
+    };
+    img.onerror = () => {
+      resolve('#111111');
+    };
+    img.src = imageUrl;
+  });
+};
 
 export const AdminPanel: React.FC = () => {
   const { 
@@ -50,6 +80,8 @@ export const AdminPanel: React.FC = () => {
   const [selectedAdminOrder, setSelectedAdminOrder] = useState<any>(null);
   const [rejectingReturnId, setRejectingReturnId] = useState<string | null>(null);
   const [rejectionNote, setRejectionNote] = useState<string>('');
+  const [tempProductId, setTempProductId] = useState<string>('');
+  const [uploadingMediaIdx, setUploadingMediaIdx] = useState<number | null>(null);
 
   // Product CRUD Modals State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -207,6 +239,7 @@ export const AdminPanel: React.FC = () => {
   const totalReturnsCount = returns.length;
 
   const openEditModal = (p: Product) => {
+    setTempProductId(p.id);
     setEditingProduct(p);
     setIsAddingProduct(false);
     setProdName(p.name);
@@ -230,6 +263,7 @@ export const AdminPanel: React.FC = () => {
   };
 
   const openAddModal = () => {
+    setTempProductId(crypto.randomUUID());
     setEditingProduct(null);
     setIsAddingProduct(true);
     setProdName('');
@@ -278,9 +312,8 @@ export const AdminPanel: React.FC = () => {
     };
 
     try {
-      let finalProdId = '';
+      let finalProdId = tempProductId || crypto.randomUUID();
       if (isAddingProduct) {
-        finalProdId = crypto.randomUUID();
         const newProd = await createProduct({
           ...payload,
           id: finalProdId
@@ -1270,13 +1303,152 @@ export const AdminPanel: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 uppercase mb-1.5 font-bold">Media URLs *</label>
-                  <div className="space-y-2">
-                    <input type="text" required value={prodImage1} onChange={e => setProdImage1(e.target.value)} placeholder="Image 1 (Main) URL" className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
-                    <input type="text" value={prodImage2} onChange={e => setProdImage2(e.target.value)} placeholder="Image 2 URL (Optional)" className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
-                    <input type="text" value={prodImage3} onChange={e => setProdImage3(e.target.value)} placeholder="Image 3 URL (Optional)" className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
-                    <input type="text" value={prodImage4} onChange={e => setProdImage4(e.target.value)} placeholder="Image 4 URL (Optional)" className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
-                    <input type="text" value={prodVideo} onChange={e => setProdVideo(e.target.value)} placeholder="Video URL (Optional, .mp4)" className="w-full p-3 bg-[#111] border border-[#333] rounded-xl text-white font-mono" />
+                  <label className="block text-gray-300 uppercase mb-3 font-bold">Product Media Ingestion (Direct Upload) *</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    
+                    {/* Image slots 1 to 4 */}
+                    {[
+                      { idx: 1, val: prodImage1, setter: setProdImage1, label: 'Main Image 1 *', req: true },
+                      { idx: 2, val: prodImage2, setter: setProdImage2, label: 'Image 2', req: false },
+                      { idx: 3, val: prodImage3, setter: setProdImage3, label: 'Image 3', req: false },
+                      { idx: 4, val: prodImage4, setter: setProdImage4, label: 'Image 4', req: false },
+                    ].map((slot) => (
+                      <div key={slot.idx} className="bg-[#111] border border-[#333] rounded-2xl p-2 relative flex flex-col items-center justify-center min-h-[120px] group">
+                        {slot.val ? (
+                          <div className="w-full h-full relative">
+                            <img src={slot.val} alt={`Slot ${slot.idx}`} className="w-full h-24 object-cover rounded-xl" />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(slot.val);
+                                  alert('Image URL copied to clipboard!');
+                                }}
+                                title="Copy URL"
+                                className="bg-[#D4AF37] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer"
+                              >
+                                📋
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => slot.setter('')}
+                                title="Remove"
+                                className="bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                            <span className="text-[9px] text-gray-400 block text-center mt-1 font-bold truncate max-w-full px-1">{slot.label}</span>
+                          </div>
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-center p-1">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              id={`img-upload-${slot.idx}`}
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setUploadingMediaIdx(slot.idx);
+                                try {
+                                  const { url, error } = await uploadProductImage(tempProductId, file);
+                                  if (error || !url) {
+                                    alert('Failed to upload image: ' + error);
+                                    return;
+                                  }
+                                  slot.setter(url);
+                                } catch (err: any) {
+                                  alert('Upload error: ' + err.message);
+                                } finally {
+                                  setUploadingMediaIdx(null);
+                                }
+                              }}
+                            />
+                            {uploadingMediaIdx === slot.idx ? (
+                              <div className="flex flex-col items-center justify-center space-y-1 py-4">
+                                <div className="w-5 h-5 border-2 border-t-transparent border-[#D4AF37] rounded-full animate-spin" />
+                                <span className="text-[9px] text-gray-400">Uploading...</span>
+                              </div>
+                            ) : (
+                              <label htmlFor={`img-upload-${slot.idx}`} className="cursor-pointer flex flex-col items-center justify-center w-full h-full py-4 hover:bg-[#1A1A1A] transition rounded-xl">
+                                <Plus className="w-5 h-5 text-gray-500 mb-1" />
+                                <span className="text-[10px] font-bold text-gray-400">{slot.label}</span>
+                              </label>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Video slot (index 5) */}
+                    <div className="bg-[#111] border border-[#333] rounded-2xl p-2 relative flex flex-col items-center justify-center min-h-[120px] group">
+                      {prodVideo ? (
+                        <div className="w-full h-full relative">
+                          <video src={prodVideo} className="w-full h-24 object-cover rounded-xl animate-fade-in" muted controls />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(prodVideo);
+                                alert('Video URL copied to clipboard!');
+                              }}
+                              title="Copy URL"
+                              className="bg-[#D4AF37] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer"
+                            >
+                              📋
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setProdVideo('')}
+                              title="Remove"
+                              className="bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <span className="text-[9px] text-gray-400 block text-center mt-1 font-bold truncate max-w-full px-1">Video (Optional)</span>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-center p-1">
+                          <input
+                            type="file"
+                            accept="video/*"
+                            id="video-upload"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setUploadingMediaIdx(5);
+                              try {
+                                const { url, error } = await uploadProductVideo(tempProductId, file);
+                                if (error || !url) {
+                                  alert('Failed to upload video: ' + error);
+                                  return;
+                                }
+                                setProdVideo(url);
+                              } catch (err: any) {
+                                alert('Upload error: ' + err.message);
+                              } finally {
+                                setUploadingMediaIdx(null);
+                              }
+                            }}
+                          />
+                          {uploadingMediaIdx === 5 ? (
+                            <div className="flex flex-col items-center justify-center space-y-1 py-4">
+                              <div className="w-5 h-5 border-2 border-t-transparent border-[#D4AF37] rounded-full animate-spin" />
+                              <span className="text-[9px] text-gray-400">Uploading...</span>
+                            </div>
+                          ) : (
+                            <label htmlFor="video-upload" className="cursor-pointer flex flex-col items-center justify-center w-full h-full py-4 hover:bg-[#1A1A1A] transition rounded-xl">
+                              <Plus className="w-5 h-5 text-gray-500 mb-1" />
+                              <span className="text-[10px] font-bold text-gray-400">Upload Video</span>
+                            </label>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                   </div>
                 </div>
 
@@ -1293,17 +1465,62 @@ export const AdminPanel: React.FC = () => {
                         <div className="flex-1 space-y-2">
                           <input type="text" value={cv.name} onChange={e => {
                             const newCvs = [...prodColorVariants]; newCvs[idx].name = e.target.value; setProdColorVariants(newCvs);
-                          }} placeholder="Color Name (e.g. Royal Red)" className="w-full p-2 bg-[#1A1A1A] border border-[#333] rounded text-white text-sm" />
-                          <input type="text" value={cv.image} onChange={e => {
-                            const newCvs = [...prodColorVariants]; newCvs[idx].image = e.target.value; setProdColorVariants(newCvs);
-                          }} placeholder="Image URL for this color" className="w-full p-2 bg-[#1A1A1A] border border-[#333] rounded text-white text-sm" />
+                          }} placeholder="Color Name (e.g. Royal Red)" className="w-full p-2 bg-[#1A1A1A] border border-[#333] rounded text-white text-xs font-bold" />
+                          
+                          <div className="flex gap-2 items-center">
+                            <input type="text" value={cv.image} onChange={async (e) => {
+                              const newCvs = [...prodColorVariants]; 
+                              newCvs[idx].image = e.target.value;
+                              
+                              // Trigger auto-color extraction from URL if pasted
+                              if (e.target.value && e.target.value.startsWith('http')) {
+                                const detectedHex = await detectAverageColor(e.target.value);
+                                newCvs[idx].code = detectedHex;
+                              }
+                              setProdColorVariants(newCvs);
+                            }} placeholder="Paste Image URL" className="flex-1 p-2 bg-[#1A1A1A] border border-[#333] rounded text-white text-xs" />
+                            
+                            <label className="bg-[#333] hover:bg-[#444] px-2.5 py-1.5 rounded-lg cursor-pointer text-[10px] font-bold text-gray-300">
+                              Upload
+                              <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                try {
+                                  // 1. Detect average color locally (using browser local object url so no CORS error occurs)
+                                  const localUrl = URL.createObjectURL(file);
+                                  const detectedHex = await detectAverageColor(localUrl);
+                                  URL.revokeObjectURL(localUrl);
+
+                                  // 2. Upload to storage
+                                  const { url, error } = await uploadProductImage(tempProductId, file);
+                                  if (error || !url) {
+                                    alert('Failed to upload image: ' + error);
+                                    return;
+                                  }
+
+                                  // 3. Update state
+                                  const newCvs = [...prodColorVariants];
+                                  newCvs[idx].image = url;
+                                  newCvs[idx].code = detectedHex;
+                                  setProdColorVariants(newCvs);
+                                } catch (err: any) {
+                                  alert('Variant upload error: ' + err.message);
+                                }
+                              }} />
+                            </label>
+                          </div>
                         </div>
-                        <input type="color" value={cv.code} onChange={e => {
-                          const newCvs = [...prodColorVariants]; newCvs[idx].code = e.target.value; setProdColorVariants(newCvs);
-                        }} className="w-10 h-10 rounded cursor-pointer border-0 p-0" />
+
+                        <div className="flex flex-col items-center gap-1 shrink-0">
+                          <input type="color" value={cv.code} onChange={e => {
+                            const newCvs = [...prodColorVariants]; newCvs[idx].code = e.target.value; setProdColorVariants(newCvs);
+                          }} className="w-10 h-10 rounded cursor-pointer border-0 p-0" />
+                          <span className="text-[9px] font-mono text-gray-400">{cv.code}</span>
+                        </div>
+
                         <button type="button" onClick={() => {
                           const newCvs = [...prodColorVariants]; newCvs.splice(idx, 1); setProdColorVariants(newCvs);
-                        }} className="p-2 text-red-400 hover:bg-red-400/10 rounded">
+                        }} className="p-2 text-red-400 hover:bg-red-400/10 rounded cursor-pointer shrink-0">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

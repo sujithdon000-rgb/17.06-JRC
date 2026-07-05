@@ -143,3 +143,32 @@ export async function uploadReturnEvidence(
 
   return { url: data.signedUrl, error: null };
 }
+
+/**
+ * Upload product video to product-images bucket
+ */
+export async function uploadProductVideo(
+  productId: string,
+  file: File
+): Promise<{ url: string | null; error: string | null }> {
+  const ext = file.name.split('.').pop() ?? 'mp4';
+  const path = `${productId}/${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('product-images')
+    .upload(path, file, {
+      cacheControl: '86400',
+      upsert: false,
+      contentType: file.type,
+    });
+
+  if (uploadError) {
+    return { url: null, error: uploadError.message };
+  }
+
+  const { data } = supabase.storage
+    .from('product-images')
+    .getPublicUrl(path);
+
+  return { url: data.publicUrl, error: null };
+}
