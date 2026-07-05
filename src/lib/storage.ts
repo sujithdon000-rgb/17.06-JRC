@@ -118,7 +118,7 @@ export async function uploadReturnEvidence(
   file: File
 ): Promise<{ url: string | null; error: string | null }> {
   const ext = file.name.split('.').pop() ?? 'jpg';
-  const path = `returns/${userId}/${returnId}_${Date.now()}.${ext}`;
+  const path = `${userId}/returns/${returnId}_${Date.now()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from('payment-screenshots')
