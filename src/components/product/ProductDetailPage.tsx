@@ -69,6 +69,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     setZoomScale(1);
   }, [product]);
 
+  const isVideo = (url: string) => url.endsWith('.mp4') || url.endsWith('.webm');
+  const selectedSizeStock = product.size_stocks?.[selectedSize] !== undefined
+    ? product.size_stocks[selectedSize]
+    : ((product.sizes || []).includes(selectedSize) ? product.stock : 0);
+  const isOutOfStock = selectedSizeStock <= 0;
+
   // Adjust quantity if it exceeds selected size's stock
   useEffect(() => {
     if (selectedSizeStock > 0 && quantity > selectedSizeStock) {
@@ -95,12 +101,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     .slice(0, 4);
 
   const activeColorVariant = product.colorVariants?.find(cv => cv.name === selectedColor);
-
-  const isVideo = (url: string) => url.endsWith('.mp4') || url.endsWith('.webm');
-  const selectedSizeStock = product.size_stocks?.[selectedSize] !== undefined
-    ? product.size_stocks[selectedSize]
-    : (product.sizes.includes(selectedSize) ? product.stock : 0);
-  const isOutOfStock = selectedSizeStock <= 0;
 
   return (
     <div className="bg-[#FCFCFC] text-[#111111] min-h-screen font-sans pb-32">
@@ -320,7 +320,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 {(product.sizes || []).map((size) => {
                   const sizeStock = product.size_stocks?.[size] !== undefined
                     ? product.size_stocks[size]
-                    : (product.sizes.includes(size) ? product.stock : 0);
+                    : ((product.sizes || []).includes(size) ? product.stock : 0);
                   const isSizeOutOfStock = sizeStock <= 0;
 
                   return (
