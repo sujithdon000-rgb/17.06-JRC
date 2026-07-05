@@ -145,10 +145,7 @@ export const AdminPanel: React.FC = () => {
   const [prodMrp, setProdMrp] = useState(24999);
   const [prodOffer, setProdOffer] = useState(18499);
   const [prodStock, setProdStock] = useState(12);
-  const [prodImage1, setProdImage1] = useState('https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop');
-  const [prodImage2, setProdImage2] = useState('');
-  const [prodImage3, setProdImage3] = useState('');
-  const [prodImage4, setProdImage4] = useState('');
+  const [prodImages, setProdImages] = useState<string[]>([]);
   const [prodVideo, setProdVideo] = useState('');
   const [prodColorVariants, setProdColorVariants] = useState<{name: string, code: string, image: string}[]>([]);
   const [prodFeatured, setProdFeatured] = useState(true);
@@ -299,11 +296,10 @@ export const AdminPanel: React.FC = () => {
     setProdMrp(p.mrp_price);
     setProdOffer(p.offer_price);
     setProdStock(p.stock);
-    setProdImage1(p.images[0] || '');
-    setProdImage2(p.images[1] || '');
-    setProdImage3(p.images[2] || '');
-    setProdImage4(p.images[3] || '');
-    setProdVideo(p.images.find(img => img.endsWith('.mp4') || img.endsWith('.webm')) || '');
+    const videoUrl = p.images.find(img => img.endsWith('.mp4') || img.endsWith('.webm')) || '';
+    const imageUrls = p.images.filter(img => img !== videoUrl);
+    setProdImages(imageUrls);
+    setProdVideo(videoUrl);
     setProdColorVariants(p.colorVariants?.map(cv => ({name: cv.name, code: cv.code, image: cv.images[0] || ''})) || []);
     setProdFeatured(p.featured);
     setProdBestSeller(p.best_seller);
@@ -323,10 +319,7 @@ export const AdminPanel: React.FC = () => {
     setProdMrp(19999);
     setProdOffer(14999);
     setProdStock(10);
-    setProdImage1('https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop');
-    setProdImage2('');
-    setProdImage3('');
-    setProdImage4('');
+    setProdImages(['https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=800&auto=format&fit=crop']);
     setProdVideo('');
     setProdColorVariants([]);
     setProdFeatured(false);
@@ -337,7 +330,7 @@ export const AdminPanel: React.FC = () => {
 
   const saveProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const rawImgs = [prodImage1, prodImage2, prodImage3, prodImage4, prodVideo];
+    const rawImgs = [...prodImages, prodVideo];
     const imgs = rawImgs.map(s => s.trim()).filter(Boolean);
     const discount = prodMrp > prodOffer ? Math.round(((prodMrp - prodOffer) / prodMrp) * 100) : 0;
 
@@ -1359,85 +1352,84 @@ export const AdminPanel: React.FC = () => {
 
                 <div>
                   <label className="block text-gray-300 uppercase mb-3 font-bold">Product Media Ingestion (Direct Upload) *</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <div className="flex flex-wrap gap-3">
                     
-                    {/* Image slots 1 to 4 */}
-                    {[
-                      { idx: 1, val: prodImage1, setter: setProdImage1, label: 'Main Image 1 *', req: true },
-                      { idx: 2, val: prodImage2, setter: setProdImage2, label: 'Image 2', req: false },
-                      { idx: 3, val: prodImage3, setter: setProdImage3, label: 'Image 3', req: false },
-                      { idx: 4, val: prodImage4, setter: setProdImage4, label: 'Image 4', req: false },
-                    ].map((slot) => (
-                      <div key={slot.idx} className="bg-[#111] border border-[#333] rounded-2xl p-2 relative flex flex-col items-center justify-center min-h-[120px] group">
-                        {slot.val ? (
-                          <div className="w-full h-full relative">
-                            <img src={slot.val} alt={`Slot ${slot.idx}`} className="w-full h-24 object-cover rounded-xl" />
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(slot.val);
-                                  alert('Image URL copied to clipboard!');
-                                }}
-                                title="Copy URL"
-                                className="bg-[#D4AF37] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer"
-                              >
-                                📋
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => slot.setter('')}
-                                title="Remove"
-                                className="bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                            <span className="text-[9px] text-gray-400 block text-center mt-1 font-bold truncate max-w-full px-1">{slot.label}</span>
-                          </div>
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-center p-1">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              id={`img-upload-${slot.idx}`}
-                              className="hidden"
-                              onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
-                                setUploadingMediaIdx(slot.idx);
-                                try {
-                                  const { url, error } = await uploadProductImage(tempProductId, file);
-                                  if (error || !url) {
-                                    alert('Failed to upload image: ' + error);
-                                    return;
-                                  }
-                                  slot.setter(url);
-                                } catch (err: any) {
-                                  alert('Upload error: ' + err.message);
-                                } finally {
-                                  setUploadingMediaIdx(null);
-                                }
+                    {/* Render all uploaded images dynamically */}
+                    {prodImages.map((imgUrl, imgIdx) => (
+                      <div key={imgIdx} className="bg-[#111] border border-[#333] rounded-2xl p-2 relative flex flex-col items-center justify-center min-w-[100px] max-w-[120px] min-h-[120px] group flex-1">
+                        <div className="w-full h-full relative">
+                          <img src={imgUrl} alt={`Product image ${imgIdx + 1}`} className="w-full h-24 object-cover rounded-xl" />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(imgUrl);
+                                alert('Image URL copied to clipboard!');
                               }}
-                            />
-                            {uploadingMediaIdx === slot.idx ? (
-                              <div className="flex flex-col items-center justify-center space-y-1 py-4">
-                                <div className="w-5 h-5 border-2 border-t-transparent border-[#D4AF37] rounded-full animate-spin" />
-                                <span className="text-[9px] text-gray-400">Uploading...</span>
-                              </div>
-                            ) : (
-                              <label htmlFor={`img-upload-${slot.idx}`} className="cursor-pointer flex flex-col items-center justify-center w-full h-full py-4 hover:bg-[#1A1A1A] transition rounded-xl">
-                                <Plus className="w-5 h-5 text-gray-500 mb-1" />
-                                <span className="text-[10px] font-bold text-gray-400">{slot.label}</span>
-                              </label>
-                            )}
+                              title="Copy URL"
+                              className="bg-[#D4AF37] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer"
+                            >
+                              📋
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newImgs = prodImages.filter((_, i) => i !== imgIdx);
+                                setProdImages(newImgs);
+                              }}
+                              title="Remove"
+                              className="bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer"
+                            >
+                              ✕
+                            </button>
                           </div>
-                        )}
+                          <span className="text-[9px] text-gray-400 block text-center mt-1 font-bold truncate max-w-full px-1">
+                            {imgIdx === 0 ? 'Main Image *' : `Image ${imgIdx + 1}`}
+                          </span>
+                        </div>
                       </div>
                     ))}
 
+                    {/* "+" Add Saree Image Button */}
+                    <div className="bg-[#111] border border-dashed border-[#444] rounded-2xl p-2 relative flex flex-col items-center justify-center min-w-[100px] max-w-[120px] min-h-[120px] hover:border-[#D4AF37] transition cursor-pointer flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="extra-image-upload"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setUploadingMediaIdx(999);
+                          try {
+                            const { url, error } = await uploadProductImage(tempProductId, file);
+                            if (error || !url) {
+                              alert('Failed to upload image: ' + error);
+                              return;
+                            }
+                            setProdImages([...prodImages, url]);
+                          } catch (err: any) {
+                            alert('Upload error: ' + err.message);
+                          } finally {
+                            setUploadingMediaIdx(null);
+                          }
+                        }}
+                      />
+                      {uploadingMediaIdx === 999 ? (
+                        <div className="flex flex-col items-center justify-center space-y-1 py-4">
+                          <div className="w-5 h-5 border-2 border-t-transparent border-[#D4AF37] rounded-full animate-spin" />
+                          <span className="text-[9px] text-gray-400">Uploading...</span>
+                        </div>
+                      ) : (
+                        <label htmlFor="extra-image-upload" className="cursor-pointer flex flex-col items-center justify-center w-full h-full py-4">
+                          <Plus className="w-6 h-6 text-[#D4AF37] mb-1" />
+                          <span className="text-[10px] font-bold text-gray-400">Add Image</span>
+                        </label>
+                      )}
+                    </div>
+
                     {/* Video slot (index 5) */}
-                    <div className="bg-[#111] border border-[#333] rounded-2xl p-2 relative flex flex-col items-center justify-center min-h-[120px] group">
+                    <div className="bg-[#111] border border-[#333] rounded-2xl p-2 relative flex flex-col items-center justify-center min-w-[100px] max-w-[120px] min-h-[120px] group flex-1">
                       {prodVideo ? (
                         <div className="w-full h-full relative">
                           <video src={prodVideo} className="w-full h-24 object-cover rounded-xl animate-fade-in" muted controls />
