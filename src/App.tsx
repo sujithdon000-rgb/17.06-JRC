@@ -152,6 +152,8 @@ export function App() {
         discount_percentage: p.discount_percentage,
         sizes: p.sizes ?? [],
         stock: p.stock,
+        shipping_fee: p.shipping_fee ?? 0,
+        size_stocks: p.size_stocks ?? {},
         images: p.images ?? [],
         colorVariants: colorVariants
           .filter((cv: any) => cv.product_id === p.id)
@@ -174,6 +176,19 @@ export function App() {
 
       setProducts(mappedProducts);
       setColorVariants(colorVariants);
+
+      // Sync local cart items with fresh mapped products to update prices/shipping fees
+      const currentCart = useStore.getState().cart;
+      if (currentCart && currentCart.length > 0) {
+        const updatedCart = currentCart.map(item => {
+          const freshProd = mappedProducts.find(p => p.id === item.product.id);
+          if (freshProd) {
+            return { ...item, product: freshProd };
+          }
+          return item;
+        });
+        useStore.setState({ cart: updatedCart });
+      }
 
       setHomepageBanners(banners.map((b: any) => ({
         id: b.id,
