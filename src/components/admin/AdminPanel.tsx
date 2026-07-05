@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Product, CategoryType, SubcategoryType } from '../../types';
-import { createProduct, updateProduct } from '../../lib/products';
+import { createProduct, updateProduct, deleteProduct } from '../../lib/products';
 import { upsertOfferConfig, updateCategoryBanner, updateHomepageBanner } from '../../lib/banners';
 import { supabase } from '../../lib/supabase';
 import { adminApprovePayment, adminRejectPayment, adminUpdateOrderStatus, adminUpdateReturnStatus } from '../../lib/orders';
@@ -697,12 +697,18 @@ export const AdminPanel: React.FC = () => {
                           </button>
 
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               if (confirm(`Are you sure you want to irrevocably delete ${p.name}?`)) {
-                                console.log(p.id);
+                                try {
+                                  await deleteProduct(p.id);
+                                  setProducts(products.filter(item => item.id !== p.id));
+                                  alert('Product deleted successfully!');
+                                } catch (err: any) {
+                                  alert('Failed to delete product: ' + err.message);
+                                }
                               }
                             }}
-                            className="p-2 rounded-xl bg-[#222] hover:bg-red-600 hover:text-white transition text-gray-400"
+                            className="p-2 rounded-xl bg-[#222] hover:bg-red-600 hover:text-white transition text-gray-400 cursor-pointer"
                             title="Delete Creation"
                           >
                             <Trash2 className="w-4 h-4" />

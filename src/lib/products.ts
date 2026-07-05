@@ -104,10 +104,16 @@ export async function updateProduct(id: string, updates: Partial<{
 }
 
 export async function deleteProduct(id: string) {
-  // Soft delete
+  // Delete color variants first to prevent foreign key errors
+  await supabase
+    .from('color_variants')
+    .delete()
+    .eq('product_id', id);
+
+  // Hard delete product
   const { error } = await supabase
     .from('products')
-    .update({ is_active: false })
+    .delete()
     .eq('id', id);
 
   if (error) throw error;
