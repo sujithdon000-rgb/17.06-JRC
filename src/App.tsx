@@ -76,10 +76,35 @@ export function App() {
     }
   }, []);
 
+  // Declare global window reference for instant admin refresh
+  useEffect(() => {
+    (window as any).refreshPublicData = loadPublicData;
+  }, []);
+
   // ── Supabase Auth Listener & Bootstrap ──────────────────────────
   useEffect(() => {
     // Load public product catalog & banners immediately (no auth required)
     loadPublicData();
+
+    // Set up Realtime subscriptions for instant catalog/banner updates
+    const publicChannel = supabase
+      .channel('public-data-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        loadPublicData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'color_variants' }, () => {
+        loadPublicData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'homepage_banners' }, () => {
+        loadPublicData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'category_banners' }, () => {
+        loadPublicData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'offer_config' }, () => {
+        loadPublicData();
+      })
+      .subscribe();
 
     // Listen to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -111,7 +136,10 @@ export function App() {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(publicChannel);
+    };
   }, []);
 
   // ── Load notification realtime subscription when user logs in ───

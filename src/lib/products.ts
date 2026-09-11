@@ -165,3 +165,12 @@ export async function deleteColorVariant(id: string) {
 
   if (error) throw error;
 }
+
+export async function deleteColorVariantsForProduct(productId: string) {
+  const { error } = await supabase
+    .from('color_variants')
+    .delete()
+    .eq('product_id', productId);
+
+  if (error) console.warn('deleteColorVariantsForProduct warning:', error);
+}

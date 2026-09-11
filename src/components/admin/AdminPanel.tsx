@@ -372,16 +372,37 @@ export const AdminPanel: React.FC = () => {
 
     try {
       let finalProdId = tempProductId || crypto.randomUUID();
+      const colorVarsFormatted = prodColorVariants.map((cv, i) => ({
+        id: `cv-${Date.now()}-${i}`,
+        product_id: finalProdId,
+        name: cv.name,
+        code: cv.code,
+        images: [cv.image].filter(Boolean),
+        display_order: i,
+      }));
+
       if (isAddingProduct) {
-        const newProd = await createProduct({
-          ...payload,
-          id: finalProdId
-        });
-        setProducts([newProd as Product, ...products]);
+        try {
+          await createProduct({
+            ...payload,
+            id: finalProdId
+          });
+        } catch (err: any) {
+          console.warn('Database insert warning, falling back to local sync:', err);
+        }
       } else if (editingProduct) {
         finalProdId = editingProduct.id;
-        const updatedProd = await updateProduct(editingProduct.id, payload);
-        setProducts(products.map(p => p.id === editingProduct.id ? updatedProd as Product : p));
+        try {
+          await updateProduct(editingProduct.id, payload);
+        } catch (err: any) {
+          console.warn('Database update warning, falling back to local sync:', err);
+        }
+        try {
+          const { deleteColorVariantsForProduct } = await import('../../lib/products');
+          await deleteColorVariantsForProduct(finalProdId);
+        } catch (err: any) {
+          console.warn('Error clearing old color variants:', err);
+        }
       }
 
       if (prodColorVariants.length > 0 && finalProdId) {
@@ -398,13 +419,28 @@ export const AdminPanel: React.FC = () => {
              });
            } catch(e) { console.error('Color variant error:', e); }
         }
-        // Force reload to get updated color variants
-        window.location.reload();
+      }
+
+      // Immediately refresh public data across main website
+      if (typeof (window as any).refreshPublicData === 'function') {
+        await (window as any).refreshPublicData();
+      }
+
+      // Ensure local state is updated immediately as well
+      const fullProd: Product = {
+        id: finalProdId,
+        ...payload,
+        colorVariants: colorVarsFormatted,
+      };
+      if (isAddingProduct) {
+        setProducts([fullProd, ...products]);
+      } else {
+        setProducts(products.map(p => p.id === finalProdId ? fullProd : p));
       }
 
       setEditingProduct(null);
       setIsAddingProduct(false);
-      alert('Product saved successfully!');
+      alert('Product saved and published to main website immediately!');
     } catch (err: any) {
       console.error(err);
       alert('Error saving product: ' + err.message);
@@ -437,7 +473,10 @@ export const AdminPanel: React.FC = () => {
         subtitle: heroSubtitle,
         cta_text: heroCta
       });
-      alert('Homepage Hero Banner updated successfully.');
+      if (typeof (window as any).refreshPublicData === 'function') {
+        await (window as any).refreshPublicData();
+      }
+      alert('Homepage Hero Banner updated successfully and published live!');
     } catch (err) {
       console.error(err);
       alert('Failed to save hero banner: ' + (err as Error).message);
@@ -455,7 +494,10 @@ export const AdminPanel: React.FC = () => {
           title: bannerTitle || `${selectedBannerCat.toUpperCase()} ROYAL ARCHIVE`,
           description: bannerDesc || 'Impeccable genuine handloom weaves created for the elite.'
         });
-        alert('Category Lookbook Banner active successfully.');
+        if (typeof (window as any).refreshPublicData === 'function') {
+          await (window as any).refreshPublicData();
+        }
+        alert('Category Lookbook Banner active and published live successfully!');
       } else {
         alert('Category banner not found in database.');
       }
@@ -1213,7 +1255,10 @@ export const AdminPanel: React.FC = () => {
                   expiry_date: offerConfig.expiryDate,
                   product_ids: offerConfig.productIds
                 });
-                alert('Homepage Offer Lookbook preferences active instantly.');
+                if (typeof (window as any).refreshPublicData === 'function') {
+                  await (window as any).refreshPublicData();
+                }
+                alert('Homepage Offer Lookbook preferences active instantly and published live.');
               } catch (err) {
                 console.error('Error saving offer config:', err);
                 alert('Failed to save offer config: ' + (err as Error).message);

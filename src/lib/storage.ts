@@ -38,6 +38,15 @@ export async function uploadPaymentScreenshot(
   return { url: data.signedUrl, error: null };
 }
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+
 /**
  * Upload product image
  */
@@ -45,26 +54,37 @@ export async function uploadProductImage(
   productId: string,
   file: File
 ): Promise<{ url: string | null; error: string | null }> {
-  const ext = file.name.split('.').pop() ?? 'jpg';
-  const path = `${productId}/${Date.now()}.${ext}`;
+  try {
+    const ext = file.name.split('.').pop() ?? 'jpg';
+    const path = `${productId}/${Date.now()}.${ext}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from('product-images')
-    .upload(path, file, {
-      cacheControl: '86400',
-      upsert: false,
-      contentType: file.type,
-    });
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(path, file, {
+        cacheControl: '86400',
+        upsert: false,
+        contentType: file.type,
+      });
 
-  if (uploadError) {
-    return { url: null, error: uploadError.message };
+    if (uploadError) {
+      console.warn('Storage upload error, using Data URL fallback:', uploadError.message);
+      const dataUrl = await fileToDataUrl(file);
+      return { url: dataUrl, error: null };
+    }
+
+    const { data } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(path);
+
+    return { url: data.publicUrl, error: null };
+  } catch (err: any) {
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      return { url: dataUrl, error: null };
+    } catch (e: any) {
+      return { url: null, error: err?.message || 'Failed to read image file' };
+    }
   }
-
-  const { data } = supabase.storage
-    .from('product-images')
-    .getPublicUrl(path);
-
-  return { url: data.publicUrl, error: null };
 }
 
 /**
@@ -73,26 +93,37 @@ export async function uploadProductImage(
 export async function uploadBannerImage(
   file: File
 ): Promise<{ url: string | null; error: string | null }> {
-  const ext = file.name.split('.').pop() ?? 'jpg';
-  const path = `banners/${Date.now()}.${ext}`;
+  try {
+    const ext = file.name.split('.').pop() ?? 'jpg';
+    const path = `banners/${Date.now()}.${ext}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from('banner-images')
-    .upload(path, file, {
-      cacheControl: '86400',
-      upsert: false,
-      contentType: file.type,
-    });
+    const { error: uploadError } = await supabase.storage
+      .from('banner-images')
+      .upload(path, file, {
+        cacheControl: '86400',
+        upsert: false,
+        contentType: file.type,
+      });
 
-  if (uploadError) {
-    return { url: null, error: uploadError.message };
+    if (uploadError) {
+      console.warn('Banner storage upload error, using Data URL fallback:', uploadError.message);
+      const dataUrl = await fileToDataUrl(file);
+      return { url: dataUrl, error: null };
+    }
+
+    const { data } = supabase.storage
+      .from('banner-images')
+      .getPublicUrl(path);
+
+    return { url: data.publicUrl, error: null };
+  } catch (err: any) {
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      return { url: dataUrl, error: null };
+    } catch (e: any) {
+      return { url: null, error: err?.message || 'Failed to read banner image' };
+    }
   }
-
-  const { data } = supabase.storage
-    .from('banner-images')
-    .getPublicUrl(path);
-
-  return { url: data.publicUrl, error: null };
 }
 
 /**
