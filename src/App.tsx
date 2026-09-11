@@ -7,7 +7,7 @@ import { supabase } from './lib/supabase';
 import { checkIsAdmin, getUserProfile } from './lib/auth';
 import { fetchProducts, fetchAllColorVariants } from './lib/products';
 import { fetchHomepageBanners, fetchCategoryBanners, fetchOfferConfig } from './lib/banners';
-import { fetchUserOrders, fetchUserNotifications, subscribeToUserNotifications, fetchAllOrdersAdmin, fetchUserReturns, fetchAllReturnsAdmin } from './lib/orders';
+import { fetchUserOrders, fetchUserNotifications, subscribeToUserNotifications, fetchAllOrdersAdmin, fetchUserReturns, fetchAllReturnsAdmin, fetchUserAddresses } from './lib/orders';
 
 // Modals & Common
 import { Header } from './components/common/Header';
@@ -112,9 +112,26 @@ export function App() {
         setSession(session);
 
         if (session?.user) {
-          // Load user profile
+          // Load user profile & saved addresses
           const profile = await getUserProfile(session.user.id);
-          
+          let savedAddresses: any[] = [];
+          try {
+            const dbAddrs = await fetchUserAddresses(session.user.id);
+            savedAddresses = dbAddrs.map((a: any) => ({
+              id: a.id,
+              fullName: a.full_name,
+              mobile: a.mobile,
+              email: a.email,
+              addressLine: a.address_line,
+              city: a.city,
+              state: a.state,
+              pincode: a.pincode,
+              isDefault: a.is_default,
+            }));
+          } catch (e) {
+            console.error('Failed to fetch addresses:', e);
+          }
+
           setUser({
             id: session.user.id,
             name: profile?.full_name || session.user.email?.split('@')[0] || 'Customer',
@@ -122,7 +139,7 @@ export function App() {
             mobile: profile?.mobile || session.user.phone || '',
             isVerified: profile?.is_verified ?? true,
             authType: profile?.auth_type || 'otp-mobile',
-            savedAddresses: [],
+            savedAddresses,
           });
 
           // Check admin status (for data loading)

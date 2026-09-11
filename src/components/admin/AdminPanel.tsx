@@ -27,7 +27,7 @@ import { Product, CategoryType, SubcategoryType } from '../../types';
 import { createProduct, updateProduct, deleteProduct } from '../../lib/products';
 import { upsertOfferConfig, updateCategoryBanner, updateHomepageBanner } from '../../lib/banners';
 import { supabase } from '../../lib/supabase';
-import { adminApprovePayment, adminRejectPayment, adminUpdateOrderStatus, adminUpdateReturnStatus } from '../../lib/orders';
+import { adminApprovePayment, adminRejectPayment, adminUpdateOrderStatus, adminUpdateReturnStatus, adminUpdateTracking } from '../../lib/orders';
 import { uploadProductImage, uploadProductVideo } from '../../lib/storage';
 
 const detectAverageColor = (imageUrl: string): Promise<string> => {
@@ -127,6 +127,8 @@ export const AdminPanel: React.FC = () => {
   const [adminTab, setAdminTab] = useState<'dashboard' | 'products' | 'categories' | 'banners' | 'orders' | 'returns' | 'offers'>('dashboard');
 
   const [selectedAdminOrder, setSelectedAdminOrder] = useState<any>(null);
+  const [adminCourierName, setAdminCourierName] = useState<string>('');
+  const [adminTrackingNumber, setAdminTrackingNumber] = useState<string>('');
   const [rejectingReturnId, setRejectingReturnId] = useState<string | null>(null);
   const [rejectionNote, setRejectionNote] = useState<string>('');
   const [tempProductId, setTempProductId] = useState<string>('');
@@ -1055,7 +1057,11 @@ export const AdminPanel: React.FC = () => {
                         </td>
                         <td className="p-4 text-right">
                           <button
-                            onClick={() => setSelectedAdminOrder(o)}
+                            onClick={() => {
+                              setSelectedAdminOrder(o);
+                              setAdminCourierName(o.courierName || '');
+                              setAdminTrackingNumber(o.trackingNumber || '');
+                            }}
                             className="bg-[#D4AF37] hover:bg-white text-black font-extrabold px-3 py-2 rounded-xl text-xs tracking-wider uppercase transition cursor-pointer"
                           >
                             Manage
@@ -2049,6 +2055,63 @@ export const AdminPanel: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                {/* 3. Courier & Tracking Details */}
+                <div className="space-y-3 pt-4 border-t border-[#333]">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase block tracking-wider">Step 3: Courier Tracking Info</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] text-gray-400 font-bold uppercase mb-1">Courier Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. DTDC / Delhivery / Professional"
+                        value={adminCourierName}
+                        onChange={(e) => setAdminCourierName(e.target.value)}
+                        className="w-full p-2.5 bg-[#111] border border-[#333] rounded-xl text-xs text-white focus:border-[#D4AF37] focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-400 font-bold uppercase mb-1">Tracking Number / AWB</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. D123456789IN"
+                        value={adminTrackingNumber}
+                        onChange={(e) => setAdminTrackingNumber(e.target.value)}
+                        className="w-full p-2.5 bg-[#111] border border-[#333] rounded-xl text-xs font-mono text-white focus:border-[#D4AF37] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!adminTrackingNumber.trim()) {
+                        alert('Please enter a tracking number.');
+                        return;
+                      }
+                      try {
+                        const courier = adminCourierName.trim() || 'Standard Express';
+                        const tracking = adminTrackingNumber.trim();
+
+                        await adminUpdateTracking(selectedAdminOrder.id, tracking, courier);
+                        useStore.getState().updateOrderInStore(selectedAdminOrder.order_id, {
+                          trackingNumber: tracking,
+                          courierName: courier,
+                        });
+                        setSelectedAdminOrder({
+                          ...selectedAdminOrder,
+                          trackingNumber: tracking,
+                          courierName: courier,
+                        });
+                        alert('Courier tracking details updated successfully! Customer can view live tracking.');
+                      } catch (e: any) {
+                        alert('Failed to save tracking details: ' + e.message);
+                      }
+                    }}
+                    className="w-full bg-[#D4AF37] hover:bg-white text-black transition py-3 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer"
+                  >
+                    Save & Publish Tracking Info
+                  </button>
+                </div>
 
               </div>
             </motion.div>

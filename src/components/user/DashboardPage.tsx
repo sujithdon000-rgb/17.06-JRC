@@ -18,9 +18,9 @@ import {
   Plus
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
-import { Product, Order } from '../../types';
+import { Product, Order, Address } from '../../types';
 import { supabase } from '../../lib/supabase';
-import { createReturnRequest } from '../../lib/orders';
+import { createReturnRequest, saveUserAddress } from '../../lib/orders';
 import { uploadReturnEvidence } from '../../lib/storage';
 
 interface DashboardPageProps {
@@ -162,20 +162,48 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
     }
   };
 
-  const handleSaveNewAddress = (e: React.FormEvent) => {
+  const handleSaveNewAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    // const newA: Address = {
-    //   fullName: addrFullName,
-    //   mobile: addrMobile,
-    //   email: addrEmail,
-    //   addressLine: addrLine,
-    //   city: addrCity,
-    //   state: addrState,
-    //   pincode: addrPincode
-    // };
-    // saveAddress(newA);
-    console.log('Save address functionality has been migrated to Supabase endpoints.');
-    setShowAddAddress(false);
+    if (!user) return;
+    try {
+      const saved = await saveUserAddress(user.id, {
+        full_name: addrFullName,
+        mobile: addrMobile,
+        email: addrEmail,
+        address_line: addrLine,
+        city: addrCity,
+        state: addrState,
+        pincode: addrPincode,
+      });
+
+      const newAddr: Address = {
+        id: saved.id,
+        fullName: addrFullName,
+        mobile: addrMobile,
+        email: addrEmail,
+        addressLine: addrLine,
+        city: addrCity,
+        state: addrState,
+        pincode: addrPincode,
+      };
+
+      const { setUser } = useStore.getState();
+      setUser({
+        ...user,
+        savedAddresses: [newAddr, ...user.savedAddresses],
+      });
+
+      setShowAddAddress(false);
+      setAddrFullName('');
+      setAddrMobile('');
+      setAddrEmail('');
+      setAddrLine('');
+      setAddrCity('');
+      setAddrState('');
+      setAddrPincode('');
+    } catch (err: any) {
+      alert('Failed to save address: ' + err.message);
+    }
   };
 
   return (
@@ -316,6 +344,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                           </div>
                         </div>
 
+                        {/* Courier Tracking Info Box */}
+                        {(order.trackingNumber || order.courierName) && (
+                          <div className="bg-[#111111] text-white p-3.5 rounded-2xl border border-[#D4AF37]/40 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <Truck className="w-4 h-4 text-[#D4AF37]" />
+                              <span><strong>Courier:</strong> {order.courierName || 'Express Dispatch'}</span>
+                            </div>
+                            {order.trackingNumber && (
+                              <div className="font-mono text-gray-300">
+                                <strong>AWB / Tracking #:</strong> <span className="bg-[#222] text-[#D4AF37] px-2.5 py-1 rounded-lg border border-[#333] font-bold">{order.trackingNumber}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* Items */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {order.items.map((it, idx) => (
@@ -323,7 +366,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onSelectProduct, o
                               <img src={it.product.images[0]} alt={it.product.name} className="w-16 h-20 rounded-xl object-cover" />
                               <div className="flex-1 min-w-0">
                                 <h5 className="font-bold text-xs text-gray-900 line-clamp-1">{it.product.name}</h5>
-                                <span className="text-xs font-bold text-[#111] block mt-1">₹{it.product.offer_price.toLocaleString('en-IN')} x {it.quantity}</span>
+                                <div className="flex flex-wrap gap-1.5 mt-1">
+                                  {it.selectedSize && (
+                                    <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">
+                                      Size: {it.selectedSize}
+                                    </span>
+                                  )}
+                                  {it.selectedColor && (
+                                    <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                                      {it.selectedColorCode && (
+                                        <span
+                                          className="w-2.5 h-2.5 rounded-full border border-gray-300"
+                                          style={{ backgroundColor: it.selectedColorCode }}
+                                        />
+                                      )}
+                                      {it.selectedColor}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-xs font-bold text-[#111] block mt-1.5">₹{it.product.offer_price.toLocaleString('en-IN')} x {it.quantity}</span>
                               </div>
                             </div>
                           ))}
